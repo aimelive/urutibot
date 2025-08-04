@@ -34,4 +34,13 @@ public class Appointment {
         COMPLETED,
         CANCELLED
     }
+
+    /**
+     * Get the status as a lowercase string for CSS classes
+     * 
+     * @return lowercase status string
+     */
+    public String getStatusLower() {
+        return status != null ? status.name().toLowerCase() : "";
+    }
 }

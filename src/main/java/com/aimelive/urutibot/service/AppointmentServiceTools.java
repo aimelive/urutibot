@@ -28,7 +28,29 @@ public class AppointmentServiceTools {
 
     @Tool("Book an appointment. Returns appointment information including full name, email, purpose, date and time, and status.")
     public AppointmentResponse createAppointment(String fullName, String email, String purpose, String dateTime) {
-        AppointmentRequest request = new AppointmentRequest(fullName, email, purpose, LocalDateTime.parse(dateTime));
+        // Handle different date formats
+        LocalDateTime parsedDateTime;
+        try {
+            // Try ISO format first (2025-08-05T14:00:00)
+            parsedDateTime = LocalDateTime.parse(dateTime);
+        } catch (Exception e1) {
+            try {
+                // Try format without seconds (2025-08-05 14:00)
+                parsedDateTime = LocalDateTime.parse(dateTime,
+                        java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+            } catch (Exception e2) {
+                try {
+                    // Try format with date only (2025-08-05)
+                    parsedDateTime = LocalDateTime.parse(dateTime + " 00:00",
+                            java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+                } catch (Exception e3) {
+                    throw new IllegalArgumentException(
+                            "Invalid date format. Please use format: yyyy-MM-dd HH:mm or yyyy-MM-dd'T'HH:mm:ss");
+                }
+            }
+        }
+
+        AppointmentRequest request = new AppointmentRequest(fullName, email, purpose, parsedDateTime);
         return appointmentService.createAppointment(request);
     }
 

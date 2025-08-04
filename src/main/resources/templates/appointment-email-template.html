@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>New Appointment Notification</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f4;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background-color: #ffffff;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+      }
+      .header {
+        background: linear-gradient(135deg, #00aaa9 0%, #008a89 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
+      .header h1 {
+        margin: 0;
+        font-size: 28px;
+        font-weight: 300;
+      }
+      .content {
+        padding: 40px 30px;
+      }
+      .appointment-details {
+        background-color: #f8f9fa;
+        border-left: 4px solid #00aaa9;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 0 8px 8px 0;
+      }
+
+      .appointment-details.cancelled {
+        background-color: #fff5f5;
+        border-left: 4px solid #dc3545;
+      }
+
+      .appointment-details.completed {
+        background-color: #f0f9ff;
+        border-left: 4px solid #00aaa9;
+      }
+      .detail-row {
+        display: flex;
+        margin-bottom: 10px;
+        align-items: center;
+      }
+      .detail-label {
+        font-weight: 600;
+        color: #555;
+        min-width: 120px;
+      }
+      .detail-value {
+        color: #333;
+        flex: 1;
+      }
+      .calendar-button {
+        display: inline-block;
+        background-color: #00aaa9;
+        color: white;
+        padding: 12px 24px;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: 500;
+        margin: 20px 0;
+        transition: background-color 0.3s;
+      }
+      .calendar-button:hover {
+        background-color: #008a89;
+      }
+
+      .calendar-button.cancelled {
+        background-color: #6c757d;
+      }
+
+      .calendar-button.cancelled:hover {
+        background-color: #5a6268;
+      }
+      .footer {
+        background-color: #f8f9fa;
+        padding: 20px 30px;
+        text-align: center;
+        color: #666;
+        font-size: 14px;
+      }
+      .status-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+      .status-booked {
+        background-color: #d1f2eb;
+        color: #00aaa9;
+        border: 1px solid #00aaa9;
+      }
+      .status-completed {
+        background-color: #e8f5e8;
+        color: #28a745;
+        border: 1px solid #28a745;
+      }
+      .status-cancelled {
+        background-color: #ffeaea;
+        color: #dc3545;
+        border: 1px solid #dc3545;
+      }
+      @media only screen and (max-width: 600px) {
+        .container {
+          margin: 0;
+          box-shadow: none;
+        }
+        .content {
+          padding: 20px 15px;
+        }
+        .header {
+          padding: 20px 15px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1
+          th:text="${appointment.statusLower == 'booked' ? '📅 New Appointment Notification' :
+                       appointment.statusLower == 'cancelled' ? '❌ Appointment Cancelled' : 
+                       '✅ Appointment Completed'}"
+        >
+          📅 Appointment Notification
+        </h1>
+        <p style="margin: 10px 0 0 0; opacity: 0.9">
+          UrutiBot - Your Appointment Management System
+        </p>
+      </div>
+
+      <div class="content">
+        <h2 style="color: #333; margin-top: 0">Hello Admin,</h2>
+        <p
+          th:text="${appointment.statusLower == 'booked' ? 'A new appointment has been scheduled by UrutiBot. Here are the details:' :
+                     appointment.statusLower == 'cancelled' ? 'An appointment has been cancelled by UrutiBot. Here are the details:' :
+                     'An appointment has been completed by UrutiBot. Here are the details:'}"
+        >
+          An appointment notification has been sent. Here are the details:
+        </p>
+
+        <div
+          class="appointment-details"
+          th:classappend="${appointment.statusLower}"
+        >
+          <div class="detail-row">
+            <span class="detail-label">👤 Client Name:</span>
+            <span class="detail-value" th:text="${appointment.fullName}"></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">📧 Email:</span>
+            <span class="detail-value" th:text="${appointment.email}"></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">📅 Date & Time:</span>
+            <span class="detail-value" th:text="${formattedDateTime}"></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">🎯 Purpose:</span>
+            <span class="detail-value" th:text="${appointment.purpose}"></span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">📊 Status:</span>
+            <span class="detail-value">
+              <span
+                class="status-badge"
+                th:classappend="'status-' + ${appointment.statusLower}"
+                th:text="${appointment.status}"
+              ></span>
+            </span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">🆔 Appointment ID:</span>
+            <span class="detail-value" th:text="${appointment.id}"></span>
+          </div>
+        </div>
+
+        <div
+          style="text-align: center; margin: 30px 0"
+          th:if="${appointment.statusLower == 'booked'}"
+        >
+          <a
+            th:href="${googleCalendarUrl}"
+            class="calendar-button"
+            target="_blank"
+          >
+            📅 Add to Google Calendar
+          </a>
+        </div>
+
+        <div
+          style="text-align: center; margin: 30px 0"
+          th:if="${appointment.statusLower == 'cancelled'}"
+        >
+          <p style="color: #dc3545; font-weight: 600; margin: 20px 0">
+            ⚠️ This appointment has been cancelled and is no longer active.
+          </p>
+        </div>
+
+        <div
+          style="text-align: center; margin: 30px 0"
+          th:if="${appointment.statusLower == 'completed'}"
+        >
+          <p style="color: #28a745; font-weight: 600; margin: 20px 0">
+            ✅ This appointment has been marked as completed.
+          </p>
+        </div>
+
+        <p
+          style="margin-top: 30px; color: #666"
+          th:if="${appointment.statusLower == 'booked'}"
+        >
+          <strong>Quick Actions:</strong><br />
+          • Review appointment details above<br />
+          • Add to your Google Calendar using the button above<br />
+          • Contact the client if needed at:
+          <a
+            th:href="'mailto:' + ${appointment.email}"
+            style="color: #00aaa9"
+            th:text="${appointment.email}"
+          ></a>
+        </p>
+
+        <p
+          style="margin-top: 30px; color: #666"
+          th:if="${appointment.statusLower == 'cancelled'}"
+        >
+          <strong>Next Steps:</strong><br />
+          • Review the cancelled appointment details above<br />
+          • Consider contacting the client to understand the reason<br />
+          • Update your calendar to reflect the cancellation<br />
+          • Contact the client if needed at:
+          <a
+            th:href="'mailto:' + ${appointment.email}"
+            style="color: #00aaa9"
+            th:text="${appointment.email}"
+          ></a>
+        </p>
+
+        <p
+          style="margin-top: 30px; color: #666"
+          th:if="${appointment.statusLower == 'completed'}"
+        >
+          <strong>Next Steps:</strong><br />
+          • Review the completed appointment details above<br />
+          • Update your records to reflect completion<br />
+          • Consider following up with the client for feedback<br />
+          • Contact the client if needed at:
+          <a
+            th:href="'mailto:' + ${appointment.email}"
+            style="color: #00aaa9"
+            th:text="${appointment.email}"
+          ></a>
+        </p>
+      </div>
+
+      <div class="footer">
+        <p style="margin: 0">
+          <strong>UrutiBot</strong><br />
+          <small
+            >This is an automated notification. Please do not reply to this
+            email.</small
+          >
+        </p>
+      </div>
+    </div>
+  </body>
+</html>
