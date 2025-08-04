@@ -1,7 +1,7 @@
 package com.aimelive.urutibot.service;
 
-import com.aimelive.urutibot.model.Message;
-import com.aimelive.urutibot.repository.MessageRepository;
+import com.aimelive.urutibot.model.ChatMemory;
+import com.aimelive.urutibot.repository.ChatMemoryRepository;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.store.memory.chat.ChatMemoryStore;
 import lombok.RequiredArgsConstructor;
@@ -20,30 +20,30 @@ import static dev.langchain4j.data.message.ChatMessageSerializer.messagesToJson;
 @Slf4j
 @Transactional
 public class CustomMemoryStore implements ChatMemoryStore {
-    private final MessageRepository messageRepository;
+    private final ChatMemoryRepository chatMemoryRepository;
 
     @Override
     public List<ChatMessage> getMessages(Object memoryId) {
-        return messagesFromJson(messageRepository.findByMemoryId(memoryId.toString())
-                .map(Message::getMessages)
+        return messagesFromJson(chatMemoryRepository.findByMemoryId(memoryId.toString())
+                .map(ChatMemory::getMessages)
                 .orElse("[]"));
     }
 
     @Override
     public void updateMessages(Object memoryId, List<ChatMessage> list) {
-        Optional<Message> message = messageRepository.findByMemoryId(memoryId.toString());
+        Optional<ChatMemory> message = chatMemoryRepository.findByMemoryId(memoryId.toString());
         if (message.isEmpty()) {
-            messageRepository.save(new Message(memoryId.toString(), messagesToJson(list)));
+            chatMemoryRepository.save(new ChatMemory(memoryId.toString(), messagesToJson(list)));
         } else {
             message.ifPresent(m -> {
                 m.setMessages(messagesToJson(list));
-                messageRepository.save(m);
+                chatMemoryRepository.save(m);
             });
         }
     }
 
     @Override
     public void deleteMessages(Object memoryId) {
-        messageRepository.deleteByMemoryId(memoryId.toString());
+        chatMemoryRepository.deleteByMemoryId(memoryId.toString());
     }
 }
