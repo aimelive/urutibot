@@ -1,0 +1,25 @@
+# Maven
+target/
+.mvn/
+mvnw
+mvnw.cmd
+
+# IDEs
+.idea/
+.project
+.classpath
+.settings/
+.vscode/
+
+# Git
+.git/
+.gitignore
+
+# OS files
+.DS_Store
+
+# Tests and docs (optional)
+src/test/
+README.md
+
+
