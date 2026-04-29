@@ -298,6 +298,7 @@ a:hover {
 }
 .welcome-logo {
   margin: 0;
+  margin-bottom: 2rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -306,7 +307,7 @@ a:hover {
 }
 .welcome-logo img {
   display: block;
-  height: clamp(48px, 7vw, 72px);
+  height: clamp(32px, 5vw, 48px);
   width: auto;
   max-width: 100%;
   transition:

@@ -1,10 +1,7 @@
 package com.aimelive.urutibot.controller;
 
-import com.aimelive.urutibot.dto.ChatbotResponse;
-import dev.langchain4j.service.Result;
 import dev.langchain4j.service.TokenStream;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -34,12 +31,6 @@ public class ChatbotController {
 
     private final ChatbotService chatbotService;
     private final ObjectMapper objectMapper = new ObjectMapper();
-
-    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ChatbotResponse> chat(@RequestBody ChatbotRequest request) {
-        Result<String> answer = chatbotService.answer(request.getMemoryId(), request.getMessage());
-        return ResponseEntity.ok(new ChatbotResponse(request.getMemoryId(), answer.content()));
-    }
 
     @PostMapping(value = "/stream",
             consumes = MediaType.APPLICATION_JSON_VALUE,

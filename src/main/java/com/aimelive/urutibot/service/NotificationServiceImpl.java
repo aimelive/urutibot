@@ -33,7 +33,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public void sendAppointmentCreatedNotification(Appointment appointment) {
         try {
-            String subject = "📅 New Appointment Scheduled - " + appointment.getFullName();
+            String subject = "New Appointment Scheduled - " + appointment.getFullName();
             sendAppointmentEmail(appointment, subject, "created");
             log.info("Appointment created notification sent for appointment ID: {}", appointment.getId());
         } catch (Exception e) {
@@ -44,7 +44,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public void sendAppointmentCancelledNotification(Appointment appointment) {
         try {
-            String subject = "❌ Appointment Cancelled - " + appointment.getFullName();
+            String subject = "Appointment Cancelled - " + appointment.getFullName();
             sendAppointmentEmail(appointment, subject, "cancelled");
             log.info("Appointment cancelled notification sent for appointment ID: {}", appointment.getId());
         } catch (Exception e) {
@@ -56,7 +56,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public void sendAppointmentCompletedNotification(Appointment appointment) {
         try {
-            String subject = "✅ Appointment Completed - " + appointment.getFullName();
+            String subject = "Appointment Completed - " + appointment.getFullName();
             sendAppointmentEmail(appointment, subject, "completed");
             log.info("Appointment completed notification sent for appointment ID: {}", appointment.getId());
         } catch (Exception e) {

@@ -6,16 +6,7 @@
     <meta name="color-scheme" content="light only" />
     <meta name="supported-color-schemes" content="light" />
     <title>Appointment Notification</title>
-    <!--
-      Logo URL: pass `logoUrl` in the Thymeleaf context for environment-
-      specific overrides; otherwise the public urutihub.com asset is used
-      so the template still renders standalone. Email clients won't load a
-      relative `/logo.svg` - it has to be a fully qualified URL or a
-      cid:-attached resource. SVG renders in Apple Mail, modern Gmail web,
-      Outlook.com; Outlook desktop falls back to the alt text.
-    -->
     <style>
-      /* Reset known email-client pitfalls. */
       body,
       table,
       td,
@@ -88,11 +79,6 @@
         text-align: center;
         color: #ffffff;
       }
-      .hero-icon {
-        font-size: 40px;
-        line-height: 1;
-        margin-bottom: 8px;
-      }
       .hero-title {
         margin: 0;
         font-size: 24px;
@@ -147,9 +133,6 @@
         background: #fee2e2;
         color: #b91c1c;
       }
-
-      /* Details "card": rendered as a table for Outlook reliability;
-         each row is a label + value stacked, separated by a thin rule. */
       .details {
         background: #f7fafa;
         border: 1px solid #e6ecec;
@@ -183,8 +166,6 @@
         font-weight: 500;
       }
 
-      /* Bulletproof button: outer table provides the bg color for
-         clients that strip the inline button background. */
       .cta-wrap {
         text-align: center;
         margin: 0 0 30px;
@@ -292,7 +273,6 @@
         isBooked=${status == 'booked'},
         isCancelled=${status == 'cancelled'},
         isCompleted=${status == 'completed'},
-        heroIcon=${isBooked ? '📅' : (isCancelled ? '❌' : '✅')},
         heroTitle=${isBooked ? 'New Appointment Scheduled' : (isCancelled ? 'Appointment Cancelled' : 'Appointment Completed')},
         heroBgFrom=${isBooked ? '#00aaa9' : (isCancelled ? '#dc2626' : '#16a34a')},
         heroBgTo=${isBooked ? '#008685' : (isCancelled ? '#991b1b' : '#15803d')},
@@ -341,7 +321,6 @@
                   th:bgcolor="${heroBgFrom}"
                   th:style="'background:' + ${heroBgFrom} + ';background:linear-gradient(135deg,' + ${heroBgFrom} + ' 0%,' + ${heroBgTo} + ' 100%);'"
                 >
-                  <div class="hero-icon" th:text="${heroIcon}">📅</div>
                   <h1 class="hero-title" th:text="${heroTitle}">
                     Appointment Notification
                   </h1>
@@ -453,7 +432,7 @@
                               box-shadow: 0 8px 20px -8px rgba(0, 170, 169, 0.5);
                             "
                           >
-                            📅&nbsp;&nbsp;Add to Google Calendar
+                            &nbsp;&nbsp;Add to Google Calendar
                           </a>
                         </td>
                       </tr>

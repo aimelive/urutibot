@@ -130,17 +130,6 @@ docker run -d -p 8080:8080 \
   urutibot:local
 ```
 
-## ☁️ Deploy to Coolify
-
-`docker-compose.yml` is already Coolify-friendly:
-
-1. In Coolify, add a **Docker Compose** service pointed at this repo.
-2. Set the env vars (`DATABASE_URL`, `ANTHROPIC_API_KEY`, `APP_EMAIL_USERNAME`, `APP_EMAIL_PASSWORD`, `CORS_ALLOWED_ORIGINS`) in Coolify's env editor.
-3. Map your domain to the service - Coolify discovers port `8080` via the `expose:` directive and routes through Traefik.
-4. Deploy. Coolify builds from the Dockerfile each time - no registry needed.
-
-`JAVA_OPTS` is wired through compose, so you can tune JVM flags from the Coolify UI without rebuilding.
-
 ## 🌐 API
 
 All endpoints are documented at `/swagger-ui.html` once the app is running.
@@ -207,6 +196,6 @@ src/
 
 <div align="center">
 
-Built with ☕ and Claude by **UrutiHub Ltd** - empowering businesses through innovative technology.
+Built with ☕ by **UrutiHub Ltd** - empowering businesses through innovative technology.
 
 </div>
