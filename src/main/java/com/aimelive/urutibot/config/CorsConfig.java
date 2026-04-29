@@ -13,8 +13,16 @@ public class CorsConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
+        String[] origins = allowedOrigins.split(",");
+
         registry.addMapping("/api/chatbot")
-                .allowedOrigins(allowedOrigins.split(","))
+                .allowedOrigins(origins)
+                .allowedMethods("POST")
+                .allowedHeaders("*")
+                .allowCredentials(true);
+
+        registry.addMapping("/api/chatbot/stream")
+                .allowedOrigins(origins)
                 .allowedMethods("POST")
                 .allowedHeaders("*")
                 .allowCredentials(true);

@@ -21,5 +21,16 @@ mvnw.cmd
 # Tests and docs (optional)
 src/test/
 README.md
+HELP.md
+
+# Secrets and local-only files - never ship these into the build context.
+.env
+.env.*
+!.env.example
+
+# Docker artifacts (avoid recursive context bloat)
+docker-compose.yml
+docker-compose.*.yml
+Dockerfile.*
 
 

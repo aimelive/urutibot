@@ -1,284 +1,546 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>New Appointment Notification</title>
+    <meta name="color-scheme" content="light only" />
+    <meta name="supported-color-schemes" content="light" />
+    <title>Appointment Notification</title>
+    <!--
+      Logo URL: pass `logoUrl` in the Thymeleaf context for environment-
+      specific overrides; otherwise the public urutihub.com asset is used
+      so the template still renders standalone. Email clients won't load a
+      relative `/logo.svg` - it has to be a fully qualified URL or a
+      cid:-attached resource. SVG renders in Apple Mail, modern Gmail web,
+      Outlook.com; Outlook desktop falls back to the alt text.
+    -->
     <style>
+      /* Reset known email-client pitfalls. */
+      body,
+      table,
+      td,
+      p,
+      a {
+        -webkit-text-size-adjust: 100%;
+        -ms-text-size-adjust: 100%;
+      }
+      table {
+        border-collapse: collapse;
+        mso-table-lspace: 0pt;
+        mso-table-rspace: 0pt;
+      }
+      img {
+        border: 0;
+        outline: none;
+        -ms-interpolation-mode: bicubic;
+        display: block;
+      }
+      a {
+        color: #008685;
+        text-decoration: none;
+      }
+
       body {
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        line-height: 1.6;
-        color: #333;
         margin: 0;
         padding: 0;
-        background-color: #f4f4f4;
+        background-color: #f1f5f5;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+          Cantarell, "Helvetica Neue", Arial, sans-serif;
+        color: #14201f;
+        line-height: 1.55;
       }
+
+      .wrap {
+        width: 100%;
+        background-color: #f1f5f5;
+        padding: 32px 16px;
+      }
+
       .container {
+        width: 100%;
         max-width: 600px;
         margin: 0 auto;
-        background-color: #ffffff;
-        box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        background: #ffffff;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 12px 36px -12px rgba(15, 23, 23, 0.14);
       }
-      .header {
-        background: linear-gradient(135deg, #00aaa9 0%, #008a89 100%);
-        color: white;
-        padding: 30px;
+
+      /* Logo strip on a clean white surface so the brand teal of the
+         logo doesn't clash with the colored hero band below it. */
+      .logo-strip {
+        padding: 30px 30px 18px;
         text-align: center;
+        background: #ffffff;
       }
-      .header h1 {
-        margin: 0;
-        font-size: 28px;
-        font-weight: 300;
-      }
-      .content {
-        padding: 40px 30px;
-      }
-      .appointment-details {
-        background-color: #f8f9fa;
-        border-left: 4px solid #00aaa9;
-        padding: 20px;
-        margin: 20px 0;
-        border-radius: 0 8px 8px 0;
-      }
-
-      .appointment-details.cancelled {
-        background-color: #fff5f5;
-        border-left: 4px solid #dc3545;
-      }
-
-      .appointment-details.completed {
-        background-color: #f0f9ff;
-        border-left: 4px solid #00aaa9;
-      }
-      .detail-row {
-        display: flex;
-        margin-bottom: 10px;
-        align-items: center;
-      }
-      .detail-label {
-        font-weight: 600;
-        color: #555;
-        min-width: 120px;
-      }
-      .detail-value {
-        color: #333;
-        flex: 1;
-      }
-      .calendar-button {
+      .logo-strip img {
         display: inline-block;
-        background-color: #00aaa9;
-        color: white;
-        padding: 12px 24px;
-        text-decoration: none;
-        border-radius: 6px;
-        font-weight: 500;
-        margin: 20px 0;
-        transition: background-color 0.3s;
-      }
-      .calendar-button:hover {
-        background-color: #008a89;
+        height: 34px;
+        width: auto;
       }
 
-      .calendar-button.cancelled {
-        background-color: #6c757d;
-      }
-
-      .calendar-button.cancelled:hover {
-        background-color: #5a6268;
-      }
-      .footer {
-        background-color: #f8f9fa;
-        padding: 20px 30px;
+      /* Status hero band - colored backdrop based on the appointment
+         state. Outlook desktop ignores linear-gradient and falls back
+         to the bgcolor attribute on the <td>. */
+      .hero {
+        padding: 30px 30px 34px;
         text-align: center;
-        color: #666;
-        font-size: 14px;
+        color: #ffffff;
+      }
+      .hero-icon {
+        font-size: 40px;
+        line-height: 1;
+        margin-bottom: 8px;
+      }
+      .hero-title {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 650;
+        letter-spacing: -0.01em;
+        color: #ffffff;
+      }
+      .hero-sub {
+        margin: 8px 0 0;
+        font-size: 13px;
+        color: #ffffff;
+        opacity: 0.92;
+      }
+
+      .body-cell {
+        padding: 36px 32px 12px;
+      }
+      .greeting {
+        margin: 0 0 6px;
+        font-size: 19px;
+        font-weight: 650;
+        letter-spacing: -0.01em;
+      }
+      .lede {
+        margin: 0 0 26px;
+        color: #4f5f5f;
+        font-size: 15px;
+      }
+
+      .status-row {
+        text-align: center;
+        margin: 0 0 26px;
       }
       .status-badge {
         display: inline-block;
-        padding: 6px 12px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 600;
+        padding: 7px 16px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
         text-transform: uppercase;
+        letter-spacing: 0.08em;
       }
-      .status-booked {
-        background-color: #d1f2eb;
-        color: #00aaa9;
-        border: 1px solid #00aaa9;
+      .status-badge.booked {
+        background: #d1f4f4;
+        color: #008685;
       }
-      .status-completed {
-        background-color: #e8f5e8;
-        color: #28a745;
-        border: 1px solid #28a745;
+      .status-badge.completed {
+        background: #dcfce7;
+        color: #15803d;
       }
-      .status-cancelled {
-        background-color: #ffeaea;
-        color: #dc3545;
-        border: 1px solid #dc3545;
+      .status-badge.cancelled {
+        background: #fee2e2;
+        color: #b91c1c;
       }
+
+      /* Details "card": rendered as a table for Outlook reliability;
+         each row is a label + value stacked, separated by a thin rule. */
+      .details {
+        background: #f7fafa;
+        border: 1px solid #e6ecec;
+        border-radius: 14px;
+        margin: 0 0 28px;
+      }
+      .details-row {
+        padding: 16px 22px;
+        border-bottom: 1px solid #eef2f2;
+      }
+      .details-row.last {
+        border-bottom: 0;
+      }
+      .details-label {
+        margin: 0 0 3px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #6b7878;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .details-value {
+        margin: 0;
+        font-size: 15px;
+        color: #14201f;
+        font-weight: 500;
+        word-break: break-word;
+      }
+      .details-value a {
+        color: #008685;
+        font-weight: 500;
+      }
+
+      /* Bulletproof button: outer table provides the bg color for
+         clients that strip the inline button background. */
+      .cta-wrap {
+        text-align: center;
+        margin: 0 0 30px;
+      }
+      .btn {
+        display: inline-block;
+        padding: 14px 28px;
+        border-radius: 12px;
+        color: #ffffff !important;
+        font-weight: 600;
+        font-size: 15px;
+        text-decoration: none;
+        line-height: 1;
+      }
+
+      .next-steps {
+        background: #ffffff;
+        border: 1px solid #e6ecec;
+        border-left-width: 3px;
+        border-radius: 0 12px 12px 0;
+        padding: 18px 22px;
+        margin: 0 0 8px;
+      }
+      .next-steps.booked {
+        border-left-color: #00aaa9;
+      }
+      .next-steps.cancelled {
+        border-left-color: #dc2626;
+      }
+      .next-steps.completed {
+        border-left-color: #16a34a;
+      }
+      .next-steps-title {
+        margin: 0 0 10px;
+        font-size: 13px;
+        font-weight: 650;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #14201f;
+      }
+      .next-steps ul {
+        margin: 0;
+        padding: 0 0 0 20px;
+        color: #4f5f5f;
+        font-size: 14px;
+      }
+      .next-steps li {
+        margin: 5px 0;
+      }
+
+      .footer {
+        background: #f7fafa;
+        padding: 26px 30px;
+        text-align: center;
+        border-top: 1px solid #eef2f2;
+      }
+      .footer img {
+        display: inline-block;
+        height: 22px;
+        opacity: 0.55;
+        margin: 0 0 10px;
+      }
+      .footer-text {
+        margin: 0;
+        font-size: 12px;
+        color: #6b7878;
+        line-height: 1.65;
+      }
+      .footer-text strong {
+        color: #14201f;
+      }
+
       @media only screen and (max-width: 600px) {
+        .wrap {
+          padding: 0;
+        }
         .container {
-          margin: 0;
+          border-radius: 0;
           box-shadow: none;
         }
-        .content {
-          padding: 20px 15px;
+        .logo-strip,
+        .hero,
+        .body-cell,
+        .footer {
+          padding-left: 22px;
+          padding-right: 22px;
         }
-        .header {
-          padding: 20px 15px;
+        .body-cell {
+          padding-top: 28px;
+        }
+        .hero-title {
+          font-size: 22px;
+        }
+        .greeting {
+          font-size: 18px;
         }
       }
     </style>
   </head>
   <body>
-    <div class="container">
-      <div class="header">
-        <h1
-          th:text="${appointment.statusLower == 'booked' ? '📅 New Appointment Notification' :
-                       appointment.statusLower == 'cancelled' ? '❌ Appointment Cancelled' : 
-                       '✅ Appointment Completed'}"
-        >
-          📅 Appointment Notification
-        </h1>
-        <p style="margin: 10px 0 0 0; opacity: 0.9">
-          UrutiBot - Your Appointment Management System
-        </p>
-      </div>
+    <!-- Status-derived values resolved once so the markup stays readable. -->
+    <th:block
+      th:with="
+        status=${appointment.statusLower},
+        isBooked=${status == 'booked'},
+        isCancelled=${status == 'cancelled'},
+        isCompleted=${status == 'completed'},
+        heroIcon=${isBooked ? '📅' : (isCancelled ? '❌' : '✅')},
+        heroTitle=${isBooked ? 'New Appointment Scheduled' : (isCancelled ? 'Appointment Cancelled' : 'Appointment Completed')},
+        heroBgFrom=${isBooked ? '#00aaa9' : (isCancelled ? '#dc2626' : '#16a34a')},
+        heroBgTo=${isBooked ? '#008685' : (isCancelled ? '#991b1b' : '#15803d')},
+        intro=${isBooked ? 'A new appointment was scheduled by UrutiBot. Here are the details:'
+                : (isCancelled ? 'An appointment was cancelled by UrutiBot. Here are the details:'
+                : 'An appointment has been marked completed. Here are the details:')},
+        nextStepsTitle=${isBooked ? 'Quick actions' : 'Next steps'},
+        logo=${logoUrl ?: 'https://urutibot.aimelive.com/logo.svg'}"
+    >
+      <table
+        role="presentation"
+        class="wrap"
+        width="100%"
+        cellpadding="0"
+        cellspacing="0"
+        border="0"
+      >
+        <tr>
+          <td align="center">
+            <table
+              role="presentation"
+              class="container"
+              width="600"
+              cellpadding="0"
+              cellspacing="0"
+              border="0"
+            >
+              <!-- Logo strip -->
+              <tr>
+                <td class="logo-strip">
+                  <a href="https://urutibot.aimelive.com" target="_blank">
+                    <img
+                      th:src="${logo}"
+                      alt="UrutiBot"
+                      height="34"
+                      style="height: 34px; width: auto"
+                    />
+                  </a>
+                </td>
+              </tr>
 
-      <div class="content">
-        <h2 style="color: #333; margin-top: 0">Hello Admin,</h2>
-        <p
-          th:text="${appointment.statusLower == 'booked' ? 'A new appointment has been scheduled by UrutiBot. Here are the details:' :
-                     appointment.statusLower == 'cancelled' ? 'An appointment has been cancelled by UrutiBot. Here are the details:' :
-                     'An appointment has been completed by UrutiBot. Here are the details:'}"
-        >
-          An appointment notification has been sent. Here are the details:
-        </p>
+              <!-- Status hero (color band) -->
+              <tr>
+                <td
+                  class="hero"
+                  th:bgcolor="${heroBgFrom}"
+                  th:style="'background:' + ${heroBgFrom} + ';background:linear-gradient(135deg,' + ${heroBgFrom} + ' 0%,' + ${heroBgTo} + ' 100%);'"
+                >
+                  <div class="hero-icon" th:text="${heroIcon}">📅</div>
+                  <h1 class="hero-title" th:text="${heroTitle}">
+                    Appointment Notification
+                  </h1>
+                  <p class="hero-sub">UrutiBot Appointment Management</p>
+                </td>
+              </tr>
 
-        <div
-          class="appointment-details"
-          th:classappend="${appointment.statusLower}"
-        >
-          <div class="detail-row">
-            <span class="detail-label">👤 Client Name:</span>
-            <span class="detail-value" th:text="${appointment.fullName}"></span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">📧 Email:</span>
-            <span class="detail-value" th:text="${appointment.email}"></span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">📅 Date & Time:</span>
-            <span class="detail-value" th:text="${formattedDateTime}"></span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">🎯 Purpose:</span>
-            <span class="detail-value" th:text="${appointment.purpose}"></span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">📊 Status:</span>
-            <span class="detail-value">
-              <span
-                class="status-badge"
-                th:classappend="'status-' + ${appointment.statusLower}"
-                th:text="${appointment.status}"
-              ></span>
-            </span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">🆔 Appointment ID:</span>
-            <span class="detail-value" th:text="${appointment.id}"></span>
-          </div>
-        </div>
+              <!-- Body -->
+              <tr>
+                <td class="body-cell">
+                  <p class="greeting">Hello Admin,</p>
+                  <p class="lede" th:text="${intro}">
+                    An appointment notification.
+                  </p>
 
-        <div
-          style="text-align: center; margin: 30px 0"
-          th:if="${appointment.statusLower == 'booked'}"
-        >
-          <a
-            th:href="${googleCalendarUrl}"
-            class="calendar-button"
-            target="_blank"
-          >
-            📅 Add to Google Calendar
-          </a>
-        </div>
+                  <!-- Status pill -->
+                  <div class="status-row">
+                    <span
+                      class="status-badge"
+                      th:classappend="${status}"
+                      th:text="${appointment.status}"
+                      >Booked</span
+                    >
+                  </div>
 
-        <div
-          style="text-align: center; margin: 30px 0"
-          th:if="${appointment.statusLower == 'cancelled'}"
-        >
-          <p style="color: #dc3545; font-weight: 600; margin: 20px 0">
-            ⚠️ This appointment has been cancelled and is no longer active.
-          </p>
-        </div>
+                  <!-- Details card -->
+                  <table
+                    role="presentation"
+                    class="details"
+                    width="100%"
+                    cellpadding="0"
+                    cellspacing="0"
+                    border="0"
+                  >
+                    <tr>
+                      <td class="details-row">
+                        <p class="details-label">Client name</p>
+                        <p
+                          class="details-value"
+                          th:text="${appointment.fullName}"
+                        >
+                          —
+                        </p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="details-row">
+                        <p class="details-label">Email</p>
+                        <p class="details-value">
+                          <a
+                            th:href="'mailto:' + ${appointment.email}"
+                            th:text="${appointment.email}"
+                            >—</a
+                          >
+                        </p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="details-row">
+                        <p class="details-label">Date &amp; time</p>
+                        <p class="details-value" th:text="${formattedDateTime}">
+                          —
+                        </p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="details-row">
+                        <p class="details-label">Purpose</p>
+                        <p
+                          class="details-value"
+                          th:text="${appointment.purpose}"
+                        >
+                          —
+                        </p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="details-row last">
+                        <p class="details-label">Appointment ID</p>
+                        <p class="details-value" th:text="${appointment.id}">
+                          —
+                        </p>
+                      </td>
+                    </tr>
+                  </table>
 
-        <div
-          style="text-align: center; margin: 30px 0"
-          th:if="${appointment.statusLower == 'completed'}"
-        >
-          <p style="color: #28a745; font-weight: 600; margin: 20px 0">
-            ✅ This appointment has been marked as completed.
-          </p>
-        </div>
+                  <!-- CTA: Add to calendar (only for booked) -->
+                  <div class="cta-wrap" th:if="${isBooked}">
+                    <table
+                      role="presentation"
+                      cellpadding="0"
+                      cellspacing="0"
+                      border="0"
+                      align="center"
+                    >
+                      <tr>
+                        <td
+                          bgcolor="#00aaa9"
+                          style="border-radius: 12px"
+                          align="center"
+                        >
+                          <a
+                            th:href="${googleCalendarUrl}"
+                            class="btn"
+                            target="_blank"
+                            style="
+                              background: #00aaa9;
+                              border-radius: 12px;
+                              box-shadow: 0 8px 20px -8px rgba(0, 170, 169, 0.5);
+                            "
+                          >
+                            📅&nbsp;&nbsp;Add to Google Calendar
+                          </a>
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
 
-        <p
-          style="margin-top: 30px; color: #666"
-          th:if="${appointment.statusLower == 'booked'}"
-        >
-          <strong>Quick Actions:</strong><br />
-          • Review appointment details above<br />
-          • Add to your Google Calendar using the button above<br />
-          • Contact the client if needed at:
-          <a
-            th:href="'mailto:' + ${appointment.email}"
-            style="color: #00aaa9"
-            th:text="${appointment.email}"
-          ></a>
-        </p>
+                  <!-- Next steps / quick actions -->
+                  <div class="next-steps" th:classappend="${status}">
+                    <p class="next-steps-title" th:text="${nextStepsTitle}">
+                      Next steps
+                    </p>
 
-        <p
-          style="margin-top: 30px; color: #666"
-          th:if="${appointment.statusLower == 'cancelled'}"
-        >
-          <strong>Next Steps:</strong><br />
-          • Review the cancelled appointment details above<br />
-          • Consider contacting the client to understand the reason<br />
-          • Update your calendar to reflect the cancellation<br />
-          • Contact the client if needed at:
-          <a
-            th:href="'mailto:' + ${appointment.email}"
-            style="color: #00aaa9"
-            th:text="${appointment.email}"
-          ></a>
-        </p>
+                    <ul th:if="${isBooked}">
+                      <li>Review the appointment details above.</li>
+                      <li>
+                        Add it to your calendar with the button above so it
+                        doesn't slip.
+                      </li>
+                      <li>
+                        Reach out to the client at
+                        <a
+                          th:href="'mailto:' + ${appointment.email}"
+                          th:text="${appointment.email}"
+                          >—</a
+                        >
+                        if anything needs clarifying.
+                      </li>
+                    </ul>
 
-        <p
-          style="margin-top: 30px; color: #666"
-          th:if="${appointment.statusLower == 'completed'}"
-        >
-          <strong>Next Steps:</strong><br />
-          • Review the completed appointment details above<br />
-          • Update your records to reflect completion<br />
-          • Consider following up with the client for feedback<br />
-          • Contact the client if needed at:
-          <a
-            th:href="'mailto:' + ${appointment.email}"
-            style="color: #00aaa9"
-            th:text="${appointment.email}"
-          ></a>
-        </p>
-      </div>
+                    <ul th:if="${isCancelled}">
+                      <li>Review the cancelled appointment details.</li>
+                      <li>
+                        Consider reaching out to the client to understand the
+                        reason and offer to reschedule.
+                      </li>
+                      <li>Update your calendar to reflect the cancellation.</li>
+                      <li>
+                        Contact at
+                        <a
+                          th:href="'mailto:' + ${appointment.email}"
+                          th:text="${appointment.email}"
+                          >—</a
+                        >
+                        if needed.
+                      </li>
+                    </ul>
 
-      <div class="footer">
-        <p style="margin: 0">
-          <strong>UrutiBot</strong><br />
-          <small
-            >This is an automated notification. Please do not reply to this
-            email.</small
-          >
-        </p>
-      </div>
-    </div>
+                    <ul th:if="${isCompleted}">
+                      <li>Update your records to reflect the completion.</li>
+                      <li>
+                        Consider following up for feedback - it helps tune the
+                        service.
+                      </li>
+                      <li>
+                        Reach out at
+                        <a
+                          th:href="'mailto:' + ${appointment.email}"
+                          th:text="${appointment.email}"
+                          >—</a
+                        >
+                        if a follow-up is in order.
+                      </li>
+                    </ul>
+                  </div>
+                </td>
+              </tr>
+
+              <!-- Footer -->
+              <tr>
+                <td class="footer">
+                  <img
+                    th:src="${logo}"
+                    alt="UrutiHub"
+                    height="22"
+                    style="height: 22px; width: auto; opacity: 0.55"
+                  />
+                  <p class="footer-text">
+                    This is an automated notification from
+                    <strong>UrutiBot</strong>.<br />
+                    Please do not reply to this email.
+                  </p>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </th:block>
   </body>
 </html>

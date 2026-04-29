@@ -1,0 +1,1159 @@
+/* ============================================================
+   UrutiBot - single-page chat experience
+   Critical above-the-fold tokens are inlined in index.html.
+   This file repeats the tokens so it works standalone, then
+   styles the chat card and supporting chrome.
+   ============================================================ */
+
+:root {
+  --brand: #00aaa9;
+  --brand-strong: #008685;
+  --brand-soft: #e6f7f7;
+  --on-brand: #eafafa;
+  --bg: #fafbfb;
+  --surface: #ffffff;
+  --surface-2: #eef3f3;
+  --border: #e1e7e7;
+  --text: #0e1414;
+  --text-muted: #4b5b5b;
+  --link: #007a79;
+  --link-hover: #005a59;
+  --danger: #b3261e;
+  --success: #1f7a3a;
+  --shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 24px 48px -12px rgba(0, 0, 0, 0.1);
+  --shadow-card:
+    0 1px 0 rgba(255, 255, 255, 0.6) inset, 0 1px 2px rgba(15, 23, 23, 0.04),
+    0 12px 32px -10px rgba(15, 23, 23, 0.12),
+    0 32px 64px -24px rgba(0, 170, 169, 0.14);
+  --shadow-brand: 0 8px 24px -8px
+    color-mix(in srgb, var(--brand) 50%, transparent);
+  --radius: 22px;
+  --radius-sm: 12px;
+}
+
+:root[data-theme="dark"] {
+  --brand: #2dc8c7;
+  --brand-strong: #5cdcdb;
+  --brand-soft: #0e2828;
+  --on-brand: #052828;
+  --bg: #0a0e0f;
+  --surface: #131819;
+  --surface-2: #1c2324;
+  --border: #2a3334;
+  --text: #e8eded;
+  --text-muted: #9aa6a6;
+  --link: #5cdcdb;
+  --link-hover: #8ee9e8;
+  --shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 24px 48px -12px rgba(0, 0, 0, 0.6);
+  --shadow-card:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 1px 2px rgba(0, 0, 0, 0.4),
+    0 16px 40px -10px rgba(0, 0, 0, 0.55),
+    0 32px 64px -24px rgba(45, 200, 199, 0.18);
+  --shadow-brand: 0 8px 24px -8px
+    color-mix(in srgb, var(--brand) 60%, transparent);
+}
+
+/* ---------- base ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+/* Honor the `hidden` attribute over our class-level `display` rules.
+   Without !important, our own `.chat-error { display: flex }` etc. would
+   beat the UA `[hidden] { display: none }` on equal specificity. */
+[hidden] {
+  display: none !important;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+    Cantarell, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* fallback for browsers without dvh */
+  min-height: 100dvh; /* dynamic vh: shrinks when the mobile keyboard opens
+                         so the composer doesn't end up hidden under it */
+  position: relative;
+  isolation: isolate;
+  /* Smooth color transitions when the user toggles theme - tokens cross-
+     fade instead of snapping. Limited list (no `all`) so we don't slow
+     down hover transitions on individual elements. */
+  transition:
+    background-color 0.4s ease,
+    color 0.4s ease;
+}
+/* Soft brand-tinted aurora layered behind the page. A fixed pseudo-element
+   keeps it pinned to the viewport (no scroll jitter) and a slow alternating
+   transform animation gives the page a subtle "alive" feel without
+   competing with content. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -10%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      1200px 600px at 10% -10%,
+      var(--brand-soft),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 500px at 100% 110%,
+      var(--brand-soft),
+      transparent 60%
+    );
+  animation: aurora-drift 28s ease-in-out infinite alternate;
+  will-change: transform;
+}
+@keyframes aurora-drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(2%, -1.5%, 0) scale(1.06);
+  }
+}
+img,
+svg {
+  max-width: 100%;
+  height: auto;
+}
+button {
+  font: inherit;
+}
+
+a {
+  color: var(--link);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--link-hover);
+  text-decoration: underline;
+}
+
+:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--brand);
+  color: var(--on-brand);
+  padding: 0.5rem 1rem;
+  z-index: 100;
+}
+.skip-link:focus {
+  left: 1rem;
+  top: 1rem;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- header ---------- */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: saturate(1.4) blur(6px);
+  -webkit-backdrop-filter: saturate(1.4) blur(6px);
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+}
+.brand:hover {
+  text-decoration: none;
+}
+.brand img {
+  display: block;
+  height: 28px;
+  width: auto;
+  transition:
+    transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1.4),
+    filter 0.25s ease;
+}
+.brand:hover img {
+  transform: scale(1.04);
+  filter: drop-shadow(
+    0 4px 10px color-mix(in srgb, var(--brand) 35%, transparent)
+  );
+}
+
+.theme-toggle {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+.theme-toggle:hover {
+  background: var(--surface-2);
+  border-color: color-mix(in srgb, var(--brand) 35%, var(--border));
+}
+.theme-toggle:hover .icon-sun,
+.theme-toggle:hover .icon-moon {
+  transform: rotate(20deg);
+}
+.theme-toggle:active {
+  transform: scale(0.94);
+}
+.theme-toggle .icon-sun,
+.theme-toggle .icon-moon,
+.theme-toggle .icon-system {
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.theme-toggle .icon-sun,
+.theme-toggle .icon-moon,
+.theme-toggle .icon-system {
+  display: none;
+}
+:root[data-theme-pref="light"] .theme-toggle .icon-sun {
+  display: block;
+}
+:root[data-theme-pref="dark"] .theme-toggle .icon-moon {
+  display: block;
+}
+:root[data-theme-pref="system"] .theme-toggle .icon-system {
+  display: block;
+}
+
+/* ---------- main / stage ---------- */
+.page-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.25rem;
+}
+.stage {
+  width: 100%;
+  max-width: 680px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  animation: rise 0.45s ease-out both;
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- welcome block ---------- */
+.welcome {
+  text-align: center;
+  display: grid;
+  gap: 0.5rem;
+  justify-items: center;
+  padding: 0 0.5rem;
+}
+.welcome-logo {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  animation: fade-up 0.6s 0.1s ease-out both;
+}
+.welcome-logo img {
+  display: block;
+  height: clamp(48px, 7vw, 72px);
+  width: auto;
+  max-width: 100%;
+  transition:
+    transform 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.4),
+    filter 0.4s ease;
+}
+.welcome-logo img:hover {
+  transform: scale(1.03) translateY(-2px);
+  filter: drop-shadow(
+    0 10px 24px color-mix(in srgb, var(--brand) 35%, transparent)
+  );
+}
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.welcome-sub {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 1.02rem;
+  max-width: 48ch;
+  line-height: 1.55;
+  /* Delay so the logo lands first - reads as a deliberate cascade. */
+  animation: fade-up 0.6s 0.25s ease-out both;
+}
+
+/* ---------- chat card ---------- */
+.chat-card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  /* Subtle hover lift - the shadow deepens and the card rises 2px so the
+     surface reads as interactive, not just a static panel. */
+  transition:
+    transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2),
+    box-shadow 0.35s ease;
+  animation: fade-up 0.7s 0.4s ease-out both;
+  display: flex;
+  flex-direction: column;
+  min-height: 520px;
+  /* dvh keeps the card sized to the *visible* viewport on mobile, so when
+     the keyboard opens the card shrinks instead of pushing the composer
+     off-screen. vh fallback for older browsers. */
+  max-height: min(74vh, 760px);
+  max-height: min(74dvh, 760px);
+  overflow: hidden;
+  isolation: isolate;
+  /* Keep touch / wheel scroll inside the chat - the inner .chat-log
+     handles its own scroll and shouldn't chain to the page. */
+  overscroll-behavior: contain;
+}
+.chat-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.6) inset,
+    0 1px 2px rgba(15, 23, 23, 0.04),
+    0 18px 40px -12px rgba(15, 23, 23, 0.16),
+    0 40px 80px -28px color-mix(in srgb, var(--brand) 24%, transparent);
+}
+/* Soft brand glow underneath, anchored at top - adds depth without
+   competing with content. */
+.chat-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    80% 60% at 50% -10%,
+    color-mix(in srgb, var(--brand) 12%, transparent),
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+.chat-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.chat-card-header {
+  display: flex;
+  align-items: center;
+  padding: 0.9rem 1.1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  gap: 0.75rem;
+  min-width: 0;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface) 100%, transparent),
+    color-mix(in srgb, var(--surface-2) 40%, var(--surface))
+  );
+}
+
+/* CSS-rendered bot avatar: brand-gradient circle with the "U" initial. */
+.bot-avatar {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    135deg,
+    var(--brand) 0%,
+    var(--brand-strong) 100%
+  );
+  color: var(--on-brand);
+  font-weight: 700;
+  font-size: 0.98rem;
+  letter-spacing: -0.02em;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--brand) 18%, transparent),
+    var(--shadow-brand);
+  /* Slow breathe: barely-perceptible glow pulse signals the bot is awake.
+     Distinct from the hard "online" status dot pulse. */
+  animation: avatar-breathe 4.5s ease-in-out infinite;
+}
+@keyframes avatar-breathe {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--brand) 18%, transparent),
+      var(--shadow-brand);
+  }
+  50% {
+    box-shadow:
+      0 0 0 5px color-mix(in srgb, var(--brand) 22%, transparent),
+      0 12px 30px -8px color-mix(in srgb, var(--brand) 60%, transparent);
+  }
+}
+
+.chat-card-id {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+  min-width: 0; /* allow ellipsis on long emails */
+  flex: 1;
+}
+.chat-card-name {
+  font-weight: 650;
+  color: var(--text);
+  font-size: 1rem;
+  letter-spacing: -0.005em;
+}
+.chat-card-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  min-width: 0;
+  margin-top: 1px;
+}
+.chat-card-status {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--success) 18%, transparent);
+  flex: 0 0 auto;
+  position: relative;
+}
+.chat-card-status::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: var(--success);
+  opacity: 0.35;
+  animation: pulse 2.4s ease-out infinite;
+}
+@keyframes pulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.55;
+  }
+  70% {
+    transform: scale(2);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+.chat-card-sep {
+  flex: 0 0 auto;
+  opacity: 0.65;
+}
+.chat-card-email {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  font-feature-settings: "tnum";
+}
+/* New-chat (reset) - brand-tinted pill with leading + icon.
+   Visually a destructive action: tooltip + JS confirm() warn before clearing. */
+.btn-new-chat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--brand-strong);
+  background: var(--brand-soft);
+  border: 1px solid color-mix(in srgb, var(--brand) 28%, transparent);
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.08s ease;
+}
+.btn-new-chat svg {
+  display: block;
+  opacity: 0.9;
+  transition: transform 0.25s ease;
+}
+.btn-new-chat:hover {
+  background: color-mix(in srgb, var(--brand) 16%, var(--surface));
+  border-color: color-mix(in srgb, var(--brand) 50%, transparent);
+  color: var(--brand-strong);
+  box-shadow: 0 6px 16px -8px color-mix(in srgb, var(--brand) 50%, transparent);
+}
+.btn-new-chat:hover svg {
+  transform: rotate(90deg);
+}
+.btn-new-chat:active {
+  transform: translateY(1px);
+}
+:root[data-theme="dark"] .btn-new-chat {
+  color: var(--brand);
+}
+:root[data-theme="dark"] .btn-new-chat:hover {
+  color: var(--brand-strong);
+}
+
+/* ---------- pre-chat ---------- */
+/* Layout the prechat form to fill the card: a centered hero on top,
+   and a docked input row at the bottom that mirrors the chat composer.
+   This makes the empty state read as a placeholder for the live chat. */
+.chat-prechat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0;
+  gap: 0;
+}
+.prechat-hero {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.65rem;
+  padding: 2.25rem 1.5rem 1.5rem;
+}
+
+.prechat-hero-title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  color: var(--text);
+}
+.prechat-hero-sub {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.97rem;
+  max-width: 38ch;
+  line-height: 1.55;
+}
+
+.prechat-dock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.9rem 1rem 1.1rem;
+  border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface-2) 30%, var(--surface)),
+    var(--surface)
+  );
+}
+.prechat-row {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+.prechat-row input {
+  flex: 1;
+  min-width: 0;
+  height: 46px;
+  padding: 0 1.05rem;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.96rem;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--text) 4%, transparent),
+    0 1px 2px rgba(0, 0, 0, 0.02);
+}
+.prechat-row input::placeholder {
+  color: color-mix(in srgb, var(--text-muted) 75%, transparent);
+}
+.prechat-row input:hover:not(:focus) {
+  background: color-mix(in srgb, var(--surface) 60%, var(--bg));
+  border-color: color-mix(in srgb, var(--border) 60%, var(--text-muted));
+}
+.prechat-row input:focus {
+  border-color: var(--brand);
+  background: var(--surface);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--text) 4%, transparent),
+    0 0 0 4px var(--brand-soft);
+  outline: none;
+}
+.prechat-row input[aria-invalid="true"] {
+  border-color: var(--danger);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--text) 4%, transparent),
+    0 0 0 4px color-mix(in srgb, var(--danger) 14%, transparent);
+}
+.form-error {
+  color: var(--danger);
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+/* Neutralize browser autofill: WebKit/Blink paints a hard yellow (or, in
+   dark mode, a milky blue) background and forces black text on autofilled
+   inputs. The huge inset box-shadow paints over it with our own surface,
+   and -webkit-text-fill-color restores readable foreground text. */
+.prechat-row input:-webkit-autofill,
+.prechat-row input:-webkit-autofill:hover,
+.prechat-row input:-webkit-autofill:focus,
+.chat-composer textarea:-webkit-autofill,
+.chat-composer textarea:-webkit-autofill:hover,
+.chat-composer textarea:-webkit-autofill:focus {
+  -webkit-box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--text) 4%, transparent),
+    0 0 0 1000px var(--bg) inset;
+  -webkit-text-fill-color: var(--text);
+  caret-color: var(--text);
+  border-color: var(--border);
+  transition: background-color 5000s ease-in-out 0s;
+}
+.prechat-row input:-webkit-autofill:focus,
+.chat-composer textarea:-webkit-autofill:focus {
+  -webkit-box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--text) 4%, transparent),
+    0 0 0 1000px var(--surface) inset,
+    0 0 0 4px var(--brand-soft);
+  border-color: var(--brand);
+}
+
+/* ---------- conversation ---------- */
+.chat-conversation {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.chat-log {
+  flex: 1;
+  overflow-y: auto;
+  /* Stop scroll-chaining: hitting the top/bottom of the log shouldn't
+     pull the body. Critical on mobile where rubber-banding the page
+     behind the chat feels broken. */
+  overscroll-behavior: contain;
+  padding: 1.25rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.chat-log::-webkit-scrollbar {
+  width: 8px;
+}
+.chat-log::-webkit-scrollbar-track {
+  background: transparent;
+}
+.chat-log::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.chat-log::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+
+.bubble {
+  max-width: 86%;
+  padding: 0.75rem 1rem;
+  border-radius: 18px;
+  line-height: 1.55;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+  font-size: 0.96rem;
+  animation: bubble-in 0.28s ease-out both;
+}
+@keyframes bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.bubble--user {
+  align-self: flex-end;
+  background: linear-gradient(
+    135deg,
+    var(--brand) 0%,
+    var(--brand-strong) 100%
+  );
+  color: var(--on-brand);
+  border-bottom-right-radius: 6px;
+  box-shadow: var(--shadow-brand);
+}
+.bubble--user a {
+  color: var(--on-brand);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.bubble--bot {
+  align-self: flex-start;
+  background: var(--surface-2);
+  color: var(--text);
+  border-bottom-left-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+}
+.bubble--bot a {
+  color: var(--link);
+}
+.bubble--bot a:hover {
+  color: var(--link-hover);
+}
+.bubble p {
+  margin: 0 0 0.5rem;
+}
+.bubble p:last-child {
+  margin-bottom: 0;
+}
+.bubble ul,
+.bubble ol {
+  margin: 0.25rem 0 0.5rem 1.25rem;
+  padding: 0;
+}
+.bubble code {
+  background: color-mix(in srgb, var(--text) 8%, transparent);
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.92em;
+}
+
+/* subtle "stopped" pill appended to a bot bubble after user abort */
+.bubble-stopped {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text) 10%, transparent);
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 500;
+  vertical-align: 1px;
+}
+.bubble--bot .bubble-stopped {
+  background: color-mix(in srgb, var(--text) 10%, transparent);
+}
+.bubble--user .bubble-stopped {
+  background: color-mix(in srgb, var(--on-brand) 22%, transparent);
+  color: color-mix(in srgb, var(--on-brand) 85%, transparent);
+}
+
+/* typing indicator */
+.typing {
+  display: inline-flex;
+  gap: 4px;
+  padding: 6px 2px;
+  align-items: center;
+}
+/* When the bubble is mid-stream, the typing dots sit below the partial
+   text. Empty text slot collapses to zero height so the dots show in
+   place of the message until the first token lands. */
+.bubble--streaming .bubble-text:not(:empty) {
+  margin-bottom: 0.25rem;
+}
+.bubble--streaming .typing {
+  display: flex;
+  padding: 2px 0 0;
+}
+.bubble--streaming .typing span {
+  opacity: 0.6;
+}
+.typing span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    var(--brand) 0%,
+    var(--brand-strong) 100%
+  );
+  opacity: 0.55;
+  animation: typing 1.3s infinite ease-in-out;
+}
+.typing span:nth-child(2) {
+  animation-delay: 0.18s;
+}
+.typing span:nth-child(3) {
+  animation-delay: 0.36s;
+}
+@keyframes typing {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0) scale(0.85);
+    opacity: 0.45;
+  }
+  40% {
+    transform: translateY(-5px) scale(1);
+    opacity: 1;
+  }
+}
+
+/* error block */
+.chat-error {
+  margin: 0 1.1rem 0.5rem;
+  background: color-mix(in srgb, var(--danger) 10%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--danger) 35%, var(--border));
+  color: var(--text);
+  border-radius: 14px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.chat-error p {
+  margin: 0;
+  flex: 1;
+  font-size: 0.92rem;
+}
+
+/* composer */
+.chat-composer {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-end;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface-2) 30%, var(--surface)),
+    var(--surface)
+  );
+}
+.chat-composer textarea {
+  flex: 1;
+  resize: none;
+  min-height: 46px;
+  max-height: 140px;
+  padding: 0.8rem 1.05rem;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.96rem;
+  line-height: 1.45;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+  /* subtle inner highlight to read as a tactile, raised input */
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--text) 4%, transparent),
+    0 1px 2px rgba(0, 0, 0, 0.02);
+}
+.chat-composer textarea::placeholder {
+  color: color-mix(in srgb, var(--text-muted) 75%, transparent);
+}
+.chat-composer textarea:hover:not(:disabled):not(:focus) {
+  background: color-mix(in srgb, var(--surface) 60%, var(--bg));
+  border-color: color-mix(in srgb, var(--border) 60%, var(--text-muted));
+}
+.chat-composer textarea:focus {
+  border-color: var(--brand);
+  background: var(--surface);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--text) 4%, transparent),
+    0 0 0 4px var(--brand-soft);
+  outline: none;
+}
+.chat-composer textarea:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background: var(--surface-2);
+  box-shadow: none;
+}
+
+/* ---------- buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  padding: 0.8rem 1.25rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.08s ease,
+    filter 0.18s ease;
+  text-decoration: none;
+  color: var(--text);
+  will-change: transform;
+}
+.btn:active {
+  transform: translateY(1px) scale(0.98);
+}
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-primary {
+  background: linear-gradient(
+    135deg,
+    var(--brand) 0%,
+    var(--brand-strong) 100%
+  );
+  color: var(--on-brand);
+  box-shadow: var(--shadow-brand);
+  border-color: color-mix(in srgb, var(--brand-strong) 65%, transparent);
+  position: relative;
+  overflow: hidden;
+}
+/* Diagonal sheen that sweeps across the button on hover. The pseudo
+   sits off-screen by default and translates across when the parent is
+   hovered, giving the primary CTA a tactile, premium feel. */
+.btn-primary::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    color-mix(in srgb, #ffffff 35%, transparent) 50%,
+    transparent 100%
+  );
+  transform: skewX(-20deg);
+  transition: left 0.6s ease;
+  pointer-events: none;
+}
+.btn-primary:hover::before {
+  left: 130%;
+}
+.btn-primary:hover {
+  color: var(--on-brand);
+  text-decoration: none;
+  filter: brightness(1.05);
+  box-shadow:
+    0 12px 28px -8px color-mix(in srgb, var(--brand) 60%, transparent),
+    0 2px 6px -2px color-mix(in srgb, var(--brand) 40%, transparent);
+  transform: translateY(-1px);
+}
+.btn-primary:active {
+  transform: translateY(0) scale(0.99);
+  filter: brightness(1);
+}
+
+.btn-secondary {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
+}
+.btn-secondary:hover {
+  background: var(--surface-2);
+  border-color: color-mix(in srgb, var(--border) 60%, var(--text-muted));
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: #fff;
+  box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--danger) 50%, transparent);
+}
+.btn-danger:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+.btn-sm {
+  padding: 0.5rem 0.9rem;
+  font-size: 0.88rem;
+  border-radius: 12px;
+}
+
+/* Circular icon CTAs (Send / Stop) - premium, balances the textarea pill. */
+.btn-icon {
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+.btn-icon svg {
+  transition: transform 0.18s ease;
+}
+.btn-icon:hover svg {
+  transform: scale(1.08);
+}
+.btn-icon.btn-primary svg {
+  transform: translate(-1px, 1px);
+}
+.btn-icon.btn-primary:hover svg {
+  transform: translate(-1px, 1px) scale(1.08);
+}
+
+/* ---------- footer ---------- */
+.page-footer {
+  padding: 0.85rem 1.25rem;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+}
+.page-footer a {
+  color: var(--text-muted);
+}
+.page-footer a:hover {
+  color: var(--text);
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 640px) {
+  .page-header {
+    padding: 0.75rem 1rem;
+  }
+  .page-main {
+    padding: 1rem 0.75rem;
+  }
+  .chat-card {
+    /* Allow the card to shrink below 460px when the keyboard is open
+       and the dvh-based viewport is tiny - otherwise the card would
+       overflow and push the composer off-screen. */
+    min-height: min(460px, calc(100dvh - 220px));
+    /* 230px accounts for: header (~60) + footer (~50) + main padding
+       (32) + welcome block (~70) + gap (24). Tuned so a 600px-tall
+       viewport just barely fits without forcing body scroll. */
+    max-height: calc(100vh - 230px); /* fallback */
+    max-height: calc(100dvh - 230px);
+    border-radius: 18px;
+  }
+  /* iOS zooms in on any input/textarea whose font-size is below 16px when
+     focused. Bump these to 16px on small screens so the page doesn't
+     suddenly scale up the moment the user taps the field. */
+  .prechat-row input,
+  .chat-composer textarea {
+    font-size: 16px;
+  }
+  .chat-card-header {
+    padding: 0.8rem 0.9rem;
+  }
+  .bot-avatar {
+    width: 34px;
+    height: 34px;
+    font-size: 0.92rem;
+  }
+  .chat-log {
+    padding: 1rem 0.85rem;
+  }
+  /* Bottom padding respects the iPhone home-indicator inset so the
+     send/start button doesn't end up behind it on notched devices. */
+  .chat-composer {
+    padding: 0.75rem 0.85rem max(0.85rem, env(safe-area-inset-bottom));
+  }
+  .prechat-dock {
+    padding: 0.75rem 0.85rem max(0.85rem, env(safe-area-inset-bottom));
+  }
+  .prechat-hero {
+    padding: 1.75rem 1.25rem 1rem;
+  }
+  .welcome-sub {
+    font-size: 0.95rem;
+  }
+}
+
+/* ---------- reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+  .stage {
+    animation: none;
+  }
+}
