@@ -1,0 +1,30 @@
+<!doctype html>
+<html
+  lang="en"
+  xmlns:th="http://www.thymeleaf.org"
+  th:replace="~{layout/base :: layout(
+      ~{::title},
+      ~{::section.page-meta},
+      ~{::section.page-content},
+      ~{::section.page-modals})}"
+>
+  <head>
+    <title>UrutiBot - Chat with UrutiHub</title>
+    <section class="page-meta" th:remove="tag"></section>
+  </head>
+
+  <body>
+    <section class="page-content" th:remove="tag">
+      <div class="stage">
+        <th:block th:replace="~{fragments/chat/welcome :: welcome}"></th:block>
+        <th:block th:replace="~{fragments/chat/chat-card :: chat-card}"></th:block>
+      </div>
+    </section>
+    <section class="page-modals" th:remove="tag">
+      <th:block th:replace="~{fragments/modals/auth-modal :: auth-modal}"></th:block>
+      <th:block th:replace="~{fragments/modals/my-appointments-modal :: my-appointments-modal}"></th:block>
+      <th:block th:replace="~{fragments/modals/create-appointment-modal :: create-appointment-modal}"></th:block>
+      <th:block th:replace="~{fragments/modals/admin-appointments-modal :: admin-appointments-modal}"></th:block>
+    </section>
+  </body>
+</html>

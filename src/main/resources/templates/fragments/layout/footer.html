@@ -1,0 +1,10 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+  <footer class="page-footer" th:fragment="page-footer">
+    &copy;
+    <span th:text="${#dates.year(#dates.createNow())}">2025</span> UrutiHub Ltd · Powered by
+    <a href="https://www.urutihub.com" target="_blank" rel="noopener">UrutiHub</a>
+  </footer>
+</body>
+</html>

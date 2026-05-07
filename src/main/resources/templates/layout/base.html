@@ -1,0 +1,49 @@
+<!doctype html>
+<html
+  lang="en"
+  xmlns:th="http://www.thymeleaf.org"
+  th:fragment="layout(pageTitle, pageMeta, pageContent, pageModals)"
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title th:replace="${pageTitle}">UrutiBot</title>
+
+    <th:block th:replace="~{fragments/head/meta :: site-meta}"></th:block>
+    <th:block th:replace="${pageMeta}"></th:block>
+    <th:block
+      th:replace="~{fragments/head/structured-data :: schema-org}"
+    ></th:block>
+    <th:block
+      th:replace="~{fragments/head/theme-bootstrap :: theme-init}"
+    ></th:block>
+    <th:block
+      th:replace="~{fragments/head/critical-css :: critical-css}"
+    ></th:block>
+
+    <th:block
+      th:replace="~{fragments/head/stylesheets :: page-stylesheets}"
+    ></th:block>
+  </head>
+
+  <body>
+    <a href="#chat" class="skip-link">Skip to chat</a>
+
+    <th:block th:replace="~{fragments/layout/header :: page-header}"></th:block>
+    <main class="page-main">
+      <th:block th:replace="${pageContent}"></th:block>
+    </main>
+    <th:block th:replace="~{fragments/layout/footer :: page-footer}"></th:block>
+    <th:block th:replace="${pageModals}"></th:block>
+    <div
+      class="toast-root"
+      data-toast-root
+      aria-live="polite"
+      aria-atomic="true"
+    ></div>
+    <th:block
+      th:replace="~{fragments/layout/scripts :: app-scripts}"
+    ></th:block>
+  </body>
+</html>

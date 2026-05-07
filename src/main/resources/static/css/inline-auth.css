@@ -1,0 +1,30 @@
+/* ---------- inline auth widget (inside chat bubble) ---------- */
+.inline-auth {
+  margin-top: 0.85rem;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--brand) 14%, var(--surface)) 0%,
+    color-mix(in srgb, var(--brand) 4%, var(--surface)) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--brand) 28%, var(--border));
+}
+.inline-auth-head strong {
+  display: block;
+  font-size: 0.95rem;
+  margin-bottom: 0.15rem;
+}
+.inline-auth-head p {
+  margin: 0 0 0.65rem;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+.inline-auth-actions {
+  margin-top: 0.85rem;
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+

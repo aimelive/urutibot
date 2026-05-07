@@ -1,0 +1,154 @@
+/* ---------- pre-chat ---------- */
+/* Layout the prechat form to fill the card: a centered hero on top,
+   and a docked input row at the bottom that mirrors the chat composer.
+   This makes the empty state read as a placeholder for the live chat. */
+.chat-prechat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0;
+  gap: 0;
+}
+.prechat-hero {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.65rem;
+  padding: 2.25rem 1.5rem 1.5rem;
+}
+
+.prechat-hero-title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  color: var(--text);
+}
+.prechat-hero-sub {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.97rem;
+  max-width: 38ch;
+  line-height: 1.55;
+}
+
+.prechat-dock {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.9rem 1rem 1.1rem;
+  border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface-2) 30%, var(--surface)),
+    var(--surface)
+  );
+}
+.prechat-row {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+.prechat-row input {
+  flex: 1;
+  min-width: 0;
+  height: 46px;
+  padding: 0 1.05rem;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.96rem;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--text) 4%, transparent),
+    0 1px 2px rgba(0, 0, 0, 0.02);
+}
+.prechat-row input::placeholder {
+  color: color-mix(in srgb, var(--text-muted) 75%, transparent);
+}
+.prechat-row input:hover:not(:focus) {
+  background: color-mix(in srgb, var(--surface) 60%, var(--bg));
+  border-color: color-mix(in srgb, var(--border) 60%, var(--text-muted));
+}
+.prechat-row input:focus {
+  border-color: var(--brand);
+  background: var(--surface);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--text) 4%, transparent),
+    0 0 0 4px var(--brand-soft);
+  outline: none;
+}
+.prechat-row input[aria-invalid="true"] {
+  border-color: var(--danger);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--text) 4%, transparent),
+    0 0 0 4px color-mix(in srgb, var(--danger) 14%, transparent);
+}
+.form-error {
+  color: var(--danger);
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+/* Neutralize browser autofill globally across browsers + states.
+   WebKit/Blink and Firefox both override CSS background-color on autofilled
+   inputs; the only reliable way to repaint is a giant inset box-shadow used
+   as a paintover, plus -webkit-text-fill-color to restore the foreground.
+   The 5000s background-color transition delays the autofill highlight's
+   fade-in long enough to be invisible. !important is needed because the
+   focus rule below has to defeat the base rule's coverage of `:focus`. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+textarea:-webkit-autofill:active,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus,
+select:-webkit-autofill:active,
+input:autofill,
+textarea:autofill,
+select:autofill {
+  -webkit-box-shadow: 0 0 0 1000px var(--bg) inset !important;
+  box-shadow: 0 0 0 1000px var(--bg) inset !important;
+  -webkit-text-fill-color: var(--text) !important;
+  caret-color: var(--text) !important;
+  background-color: var(--bg) !important;
+  background-image: none !important;
+  border-color: var(--border) !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+}
+
+/* Focused autofilled inputs: keep the surface + brand-soft glow that the
+   non-autofilled focus rules use, so the field looks identical to a manually
+   typed-in focused field. Listed AFTER the base block so the cascade picks
+   this up; both `:-webkit-autofill:focus` and `:autofill:focus` covered. */
+input:-webkit-autofill:focus,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill:focus,
+input:autofill:focus,
+textarea:autofill:focus,
+select:autofill:focus {
+  -webkit-box-shadow:
+    0 0 0 1000px var(--surface) inset,
+    0 0 0 4px var(--brand-soft) !important;
+  box-shadow:
+    0 0 0 1000px var(--surface) inset,
+    0 0 0 4px var(--brand-soft) !important;
+  background-color: var(--surface) !important;
+  border-color: var(--brand) !important;
+}
+

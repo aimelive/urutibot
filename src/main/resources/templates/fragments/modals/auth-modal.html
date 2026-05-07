@@ -1,0 +1,100 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+  <div
+    th:fragment="auth-modal"
+    class="modal"
+    data-modal="auth"
+    hidden
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="auth-modal-title"
+  >
+    <div class="modal-backdrop" data-modal-close></div>
+    <div class="modal-panel">
+      <button type="button" class="modal-close" data-modal-close aria-label="Close">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18" stroke="currentColor"
+                stroke-width="2.2" stroke-linecap="round" />
+        </svg>
+      </button>
+
+      <h2 class="modal-title" id="auth-modal-title">Welcome back</h2>
+      <p class="modal-subtitle" data-auth-subtitle>
+        Sign in to book, view, or cancel appointments.
+      </p>
+
+      <div class="tab-row" role="tablist">
+        <button
+          type="button"
+          class="tab is-active"
+          data-auth-tab="login"
+          role="tab"
+          aria-selected="true"
+        >Sign in</button>
+        <button
+          type="button"
+          class="tab"
+          data-auth-tab="register"
+          role="tab"
+          aria-selected="false"
+        >Create account</button>
+      </div>
+
+      <form class="auth-form" data-auth-form="login" novalidate>
+        <label class="field">
+          <span class="field-label">Email</span>
+          <input type="email" name="email" autocomplete="email" required
+                 placeholder="you@example.com" />
+        </label>
+        <label class="field">
+          <span class="field-label">Password</span>
+          <input type="password" name="password" autocomplete="current-password"
+                 required minlength="8" placeholder="••••••••" />
+        </label>
+        <p class="form-error" data-auth-error="login" hidden role="alert"></p>
+        <button type="submit" class="btn btn-primary btn-block" data-auth-submit="login">
+          <span class="btn-label">Sign in</span>
+          <span class="spinner" hidden></span>
+        </button>
+        <p class="auth-foot">
+          New here?
+          <a href="#" data-auth-switch="register">Create an account</a>
+        </p>
+      </form>
+
+      <form class="auth-form" data-auth-form="register" novalidate hidden>
+        <label class="field">
+          <span class="field-label">Full name</span>
+          <input type="text" name="fullName" autocomplete="name" required
+                 placeholder="Jane Doe" />
+        </label>
+        <label class="field">
+          <span class="field-label">Email</span>
+          <input type="email" name="email" autocomplete="email" required
+                 placeholder="you@example.com" />
+        </label>
+        <label class="field">
+          <span class="field-label">Phone <span class="muted">(optional)</span></span>
+          <input type="tel" name="phone" autocomplete="tel"
+                 placeholder="+250 788 000 000" />
+        </label>
+        <label class="field">
+          <span class="field-label">Password</span>
+          <input type="password" name="password" autocomplete="new-password"
+                 required minlength="8" placeholder="At least 8 characters" />
+        </label>
+        <p class="form-error" data-auth-error="register" hidden role="alert"></p>
+        <button type="submit" class="btn btn-primary btn-block" data-auth-submit="register">
+          <span class="btn-label">Create account</span>
+          <span class="spinner" hidden></span>
+        </button>
+        <p class="auth-foot">
+          Already have an account?
+          <a href="#" data-auth-switch="login">Sign in</a>
+        </p>
+      </form>
+    </div>
+  </div>
+</body>
+</html>

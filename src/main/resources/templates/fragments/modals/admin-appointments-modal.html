@@ -1,0 +1,56 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+  <div
+    th:fragment="admin-appointments-modal"
+    class="modal"
+    data-modal="admin-appointments"
+    hidden
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="admin-apts-title"
+  >
+    <div class="modal-backdrop" data-modal-close></div>
+    <div class="modal-panel modal-panel--wide">
+      <button type="button" class="modal-close" data-modal-close aria-label="Close">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18" stroke="currentColor"
+                stroke-width="2.2" stroke-linecap="round" />
+        </svg>
+      </button>
+
+      <div class="modal-head">
+        <div>
+          <h2 class="modal-title" id="admin-apts-title">All appointments</h2>
+          <p class="modal-subtitle">Update status or cancel any booking.</p>
+        </div>
+        <div class="modal-pager" data-admin-pager>
+          <button type="button" class="btn-icon-sm" data-admin-prev aria-label="Previous page">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+              <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2"
+                    fill="none" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+          <span data-admin-pager-text>Page 1</span>
+          <button type="button" class="btn-icon-sm" data-admin-next aria-label="Next page">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+              <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2"
+                    fill="none" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="apt-list" data-admin-appointments-list>
+        <div class="apt-empty" data-list-empty hidden>
+          <p>No appointments to display.</p>
+        </div>
+        <div class="apt-loading" data-list-loading hidden>
+          <div class="spinner spinner--lg"></div>
+          <span>Loading appointments…</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

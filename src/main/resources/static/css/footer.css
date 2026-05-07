@@ -1,0 +1,16 @@
+/* ---------- footer ---------- */
+.page-footer {
+  padding: 0.85rem 1.25rem;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+}
+.page-footer a {
+  color: var(--text-muted);
+}
+.page-footer a:hover {
+  color: var(--text);
+}
+

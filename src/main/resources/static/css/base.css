@@ -1,0 +1,127 @@
+/* ---------- base ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+/* Honor the `hidden` attribute over our class-level `display` rules.
+   Without !important, our own `.chat-error { display: flex }` etc. would
+   beat the UA `[hidden] { display: none }` on equal specificity. */
+[hidden] {
+  display: none !important;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+    Cantarell, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* fallback for browsers without dvh */
+  min-height: 100dvh; /* dynamic vh: shrinks when the mobile keyboard opens
+                         so the composer doesn't end up hidden under it */
+  position: relative;
+  isolation: isolate;
+  /* Smooth color transitions when the user toggles theme - tokens cross-
+     fade instead of snapping. Limited list (no `all`) so we don't slow
+     down hover transitions on individual elements. */
+  transition:
+    background-color 0.4s ease,
+    color 0.4s ease;
+}
+/* Soft brand-tinted aurora layered behind the page. A fixed pseudo-element
+   keeps it pinned to the viewport (no scroll jitter) and a slow alternating
+   transform animation gives the page a subtle "alive" feel without
+   competing with content. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -10%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      1200px 600px at 10% -10%,
+      var(--brand-soft),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 500px at 100% 110%,
+      var(--brand-soft),
+      transparent 60%
+    );
+  animation: aurora-drift 28s ease-in-out infinite alternate;
+  will-change: transform;
+}
+@keyframes aurora-drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(2%, -1.5%, 0) scale(1.06);
+  }
+}
+img,
+svg {
+  max-width: 100%;
+  height: auto;
+}
+button {
+  font: inherit;
+}
+
+a {
+  color: var(--link);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--link-hover);
+  text-decoration: underline;
+}
+
+:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  background: var(--brand);
+  color: var(--on-brand);
+  padding: 0.5rem 1rem;
+  z-index: 100;
+}
+.skip-link:focus {
+  left: 1rem;
+  top: 1rem;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+

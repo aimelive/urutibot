@@ -1,0 +1,28 @@
+package com.aimelive.urutibot.appointment.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Future;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class AppointmentRequest {
+    @Schema(description = "The purpose of the appointment", example = "Consultation")
+    @NotBlank(message = "Purpose is required")
+    private String purpose;
+
+    @Schema(description = "The date and time of the appointment", example = "2025-08-08T10:00:00")
+    @NotNull(message = "Date and time are required")
+    @Future(message = "Date and time must be in the future")
+    private LocalDateTime dateTime;
+}

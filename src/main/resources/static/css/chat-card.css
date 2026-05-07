@@ -1,0 +1,219 @@
+/* ---------- chat card ---------- */
+.chat-card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  /* Subtle hover lift - the shadow deepens and the card rises 2px so the
+     surface reads as interactive, not just a static panel. */
+  transition:
+    transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2),
+    box-shadow 0.35s ease;
+  animation: fade-up 0.7s 0.4s ease-out both;
+  display: flex;
+  flex-direction: column;
+  min-height: 520px;
+  /* dvh keeps the card sized to the *visible* viewport on mobile, so when
+     the keyboard opens the card shrinks instead of pushing the composer
+     off-screen. vh fallback for older browsers. */
+  max-height: min(74vh, 760px);
+  max-height: min(74dvh, 760px);
+  overflow: hidden;
+  isolation: isolate;
+  /* Keep touch / wheel scroll inside the chat - the inner .chat-log
+     handles its own scroll and shouldn't chain to the page. */
+  overscroll-behavior: contain;
+}
+.chat-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.6) inset,
+    0 1px 2px rgba(15, 23, 23, 0.04),
+    0 18px 40px -12px rgba(15, 23, 23, 0.16),
+    0 40px 80px -28px color-mix(in srgb, var(--brand) 24%, transparent);
+}
+/* Soft brand glow underneath, anchored at top - adds depth without
+   competing with content. */
+.chat-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    80% 60% at 50% -10%,
+    color-mix(in srgb, var(--brand) 12%, transparent),
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+.chat-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.chat-card-header {
+  display: flex;
+  align-items: center;
+  padding: 0.9rem 1.1rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+  gap: 0.75rem;
+  min-width: 0;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface) 100%, transparent),
+    color-mix(in srgb, var(--surface-2) 40%, var(--surface))
+  );
+}
+
+/* CSS-rendered bot avatar: brand-gradient circle with the "U" initial. */
+.bot-avatar {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    135deg,
+    var(--brand) 0%,
+    var(--brand-strong) 100%
+  );
+  color: var(--on-brand);
+  font-weight: 700;
+  font-size: 0.98rem;
+  letter-spacing: -0.02em;
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--brand) 18%, transparent),
+    var(--shadow-brand);
+  /* Slow breathe: barely-perceptible glow pulse signals the bot is awake.
+     Distinct from the hard "online" status dot pulse. */
+  animation: avatar-breathe 4.5s ease-in-out infinite;
+}
+@keyframes avatar-breathe {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--brand) 18%, transparent),
+      var(--shadow-brand);
+  }
+  50% {
+    box-shadow:
+      0 0 0 5px color-mix(in srgb, var(--brand) 22%, transparent),
+      0 12px 30px -8px color-mix(in srgb, var(--brand) 60%, transparent);
+  }
+}
+
+.chat-card-id {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+  min-width: 0; /* allow ellipsis on long emails */
+  flex: 1;
+}
+.chat-card-name {
+  font-weight: 650;
+  color: var(--text);
+  font-size: 1rem;
+  letter-spacing: -0.005em;
+}
+.chat-card-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  min-width: 0;
+  margin-top: 1px;
+}
+.chat-card-status {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--success) 18%, transparent);
+  flex: 0 0 auto;
+  position: relative;
+}
+.chat-card-status::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  background: var(--success);
+  opacity: 0.35;
+  animation: pulse 2.4s ease-out infinite;
+}
+@keyframes pulse {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.55;
+  }
+  70% {
+    transform: scale(2);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+.chat-card-sep {
+  flex: 0 0 auto;
+  opacity: 0.65;
+}
+.chat-card-email {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  font-feature-settings: "tnum";
+}
+/* New-chat (reset) - brand-tinted pill with leading + icon.
+   Visually a destructive action: tooltip + JS confirm() warn before clearing. */
+.btn-new-chat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--brand-strong);
+  background: var(--brand-soft);
+  border: 1px solid color-mix(in srgb, var(--brand) 28%, transparent);
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.08s ease;
+}
+.btn-new-chat svg {
+  display: block;
+  opacity: 0.9;
+  transition: transform 0.25s ease;
+}
+.btn-new-chat:hover {
+  background: color-mix(in srgb, var(--brand) 16%, var(--surface));
+  border-color: color-mix(in srgb, var(--brand) 50%, transparent);
+  color: var(--brand-strong);
+  box-shadow: 0 6px 16px -8px color-mix(in srgb, var(--brand) 50%, transparent);
+}
+.btn-new-chat:hover svg {
+  transform: rotate(90deg);
+}
+.btn-new-chat:active {
+  transform: translateY(1px);
+}
+:root[data-theme="dark"] .btn-new-chat {
+  color: var(--brand);
+}
+:root[data-theme="dark"] .btn-new-chat:hover {
+  color: var(--brand-strong);
+}
+

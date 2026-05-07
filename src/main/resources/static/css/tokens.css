@@ -1,0 +1,57 @@
+/* ============================================================
+   UrutiBot - single-page chat experience
+   Critical above-the-fold tokens are inlined in index.html.
+   This file repeats the tokens so it works standalone, then
+   styles the chat card and supporting chrome.
+   ============================================================ */
+
+:root {
+  --brand: #00aaa9;
+  --brand-strong: #008685;
+  --brand-soft: #e6f7f7;
+  --on-brand: #eafafa;
+  --bg: #fafbfb;
+  --surface: #ffffff;
+  --surface-2: #eef3f3;
+  --border: #e1e7e7;
+  --text: #0e1414;
+  --text-muted: #4b5b5b;
+  --link: #007a79;
+  --link-hover: #005a59;
+  --danger: #b3261e;
+  --success: #1f7a3a;
+  --shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 24px 48px -12px rgba(0, 0, 0, 0.1);
+  --shadow-card:
+    0 1px 0 rgba(255, 255, 255, 0.6) inset, 0 1px 2px rgba(15, 23, 23, 0.04),
+    0 12px 32px -10px rgba(15, 23, 23, 0.12),
+    0 32px 64px -24px rgba(0, 170, 169, 0.14);
+  --shadow-brand: 0 8px 24px -8px
+    color-mix(in srgb, var(--brand) 50%, transparent);
+  --radius: 22px;
+  --radius-sm: 12px;
+}
+
+:root[data-theme="dark"] {
+  --brand: #2dc8c7;
+  --brand-strong: #5cdcdb;
+  --brand-soft: #0e2828;
+  --on-brand: #052828;
+  --bg: #0a0e0f;
+  --surface: #131819;
+  --surface-2: #1c2324;
+  --border: #2a3334;
+  --text: #e8eded;
+  --text-muted: #9aa6a6;
+  --link: #5cdcdb;
+  --link-hover: #8ee9e8;
+  --shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 24px 48px -12px rgba(0, 0, 0, 0.6);
+  --shadow-card:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 1px 2px rgba(0, 0, 0, 0.4),
+    0 16px 40px -10px rgba(0, 0, 0, 0.55),
+    0 32px 64px -24px rgba(45, 200, 199, 0.18);
+  --shadow-brand: 0 8px 24px -8px
+    color-mix(in srgb, var(--brand) 60%, transparent);
+}
+

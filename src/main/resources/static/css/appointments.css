@@ -1,0 +1,119 @@
+/* ---------- appointments list ---------- */
+.apt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.apt-empty {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--text-muted);
+}
+.apt-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2rem 1rem;
+  color: var(--text-muted);
+}
+.apt-card {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1rem 1.1rem;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition:
+    border-color 0.18s,
+    box-shadow 0.18s;
+}
+.apt-card:hover {
+  border-color: color-mix(in srgb, var(--brand) 25%, var(--border));
+  box-shadow: 0 6px 16px -10px rgba(0, 0, 0, 0.18);
+}
+.apt-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.apt-when {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+.apt-when strong {
+  font-size: 0.98rem;
+}
+.apt-when .muted {
+  font-size: 0.8rem;
+}
+.apt-purpose {
+  margin: 0;
+  color: var(--text);
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+.apt-meta {
+  margin: 0;
+  font-size: 0.85rem;
+}
+.apt-id {
+  margin: 0;
+  font-size: 0.78rem;
+}
+.apt-id code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85em;
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+  padding: 0.05rem 0.3rem;
+  border-radius: 4px;
+}
+.apt-card-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+.apt-status-select {
+  height: 34px;
+  padding: 0 0.55rem;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+/* ---------- badges ---------- */
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.badge--info {
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+  border: 1px solid color-mix(in srgb, var(--brand) 30%, transparent);
+}
+.badge--success {
+  background: color-mix(in srgb, var(--success) 14%, transparent);
+  color: var(--success);
+  border: 1px solid color-mix(in srgb, var(--success) 35%, transparent);
+}
+.badge--danger {
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  color: var(--danger);
+  border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent);
+}
+

@@ -1,0 +1,43 @@
+/* ---------- toast ---------- */
+.toast-root {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  z-index: 300;
+  max-width: 360px;
+}
+.toast {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.7rem 1rem;
+  box-shadow: var(--shadow-lg);
+  font-size: 0.9rem;
+  color: var(--text);
+  transform: translateY(-8px);
+  opacity: 0;
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
+  border-left: 4px solid var(--brand);
+}
+.toast.is-in {
+  transform: translateY(0);
+  opacity: 1;
+}
+.toast.is-out {
+  opacity: 0;
+}
+.toast--success {
+  border-left-color: var(--success);
+}
+.toast--error {
+  border-left-color: var(--danger);
+}
+.toast--info {
+  border-left-color: var(--brand);
+}
+

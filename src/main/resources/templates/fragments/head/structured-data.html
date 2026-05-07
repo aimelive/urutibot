@@ -1,0 +1,41 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <th:block th:fragment="schema-org">
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://urutibot.aimelive.com/#organization",
+            "name": "UrutiHub",
+            "url": "https://www.urutihub.com",
+            "logo": "https://urutibot.aimelive.com/logo.svg"
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://urutibot.aimelive.com/#website",
+            "url": "https://urutibot.aimelive.com/",
+            "name": "UrutiBot",
+            "description": "UrutiBot is your assistant from UrutiHub. Ask anything about our services or book a free appointment.",
+            "publisher": { "@id": "https://urutibot.aimelive.com/#organization" },
+            "inLanguage": "en"
+          },
+          {
+            "@type": "WebApplication",
+            "@id": "https://urutibot.aimelive.com/#webapp",
+            "name": "UrutiBot",
+            "url": "https://urutibot.aimelive.com/",
+            "applicationCategory": "BusinessApplication",
+            "operatingSystem": "Any (web-based)",
+            "browserRequirements": "Requires JavaScript and modern browser.",
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+            "publisher": { "@id": "https://urutibot.aimelive.com/#organization" }
+          }
+        ]
+      }
+    </script>
+  </th:block>
+</head>
+</html>

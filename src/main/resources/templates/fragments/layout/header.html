@@ -1,0 +1,113 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+  <header class="page-header" th:fragment="page-header">
+    <a class="brand" href="/" aria-label="UrutiHub home">
+      <img src="/logo.svg" alt="UrutiHub" height="28" decoding="async" />
+    </a>
+
+    <div class="header-actions">
+      <!-- Anonymous: show Sign in / Sign up. Authenticated: show user menu. -->
+      <div class="auth-buttons" data-auth-anon hidden>
+        <button type="button" class="btn-ghost" data-action="open-login">Sign in</button>
+        <button type="button" class="btn-pill" data-action="open-register">Sign up</button>
+      </div>
+
+      <div class="user-menu" data-auth-user hidden>
+        <button
+          type="button"
+          class="user-menu-trigger"
+          data-user-menu-trigger
+          aria-haspopup="menu"
+          aria-expanded="false"
+        >
+          <span class="user-avatar" data-user-avatar aria-hidden="true">U</span>
+          <span class="user-name" data-user-name>User</span>
+          <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+            <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"
+                  fill="none" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+
+        <div class="user-menu-popover" data-user-menu-popover role="menu" hidden>
+          <div class="user-menu-header">
+            <span class="user-menu-name" data-user-menu-name></span>
+            <span class="user-menu-email" data-user-menu-email></span>
+            <span class="user-menu-roles" data-user-menu-roles></span>
+          </div>
+
+          <button type="button" class="user-menu-item" data-action="open-my-appointments">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+              <rect x="3" y="5" width="18" height="16" rx="2"
+                    stroke="currentColor" stroke-width="2" fill="none" />
+              <path d="M3 9h18M8 3v4M16 3v4"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            </svg>
+            My appointments
+          </button>
+
+          <button
+            type="button"
+            class="user-menu-item"
+            data-action="open-admin"
+            data-role-required="ADMIN"
+            hidden
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+              <path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z"
+                    stroke="currentColor" stroke-width="2" fill="none"
+                    stroke-linejoin="round" />
+            </svg>
+            Admin · all appointments
+          </button>
+
+          <button type="button" class="user-menu-item" data-action="toggle-theme">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+              <path d="M21 13.5A9 9 0 1 1 10.5 3a7 7 0 0 0 10.5 10.5z"
+                    fill="currentColor" />
+            </svg>
+            <span data-theme-label>Toggle theme</span>
+          </button>
+
+          <hr class="user-menu-sep" />
+
+          <button type="button" class="user-menu-item user-menu-danger" data-action="logout">
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+              <path d="M15 17l5-5-5-5M20 12H9M12 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6"
+                    stroke="currentColor" stroke-width="2" fill="none"
+                    stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            Sign out
+          </button>
+        </div>
+      </div>
+
+      <button
+        id="theme-toggle"
+        class="theme-toggle"
+        type="button"
+        aria-label="Toggle color theme"
+        title="Toggle theme"
+      >
+        <svg class="icon-sun" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+          <circle cx="12" cy="12" r="4" fill="currentColor" />
+          <g stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M12 2v3" /><path d="M12 19v3" />
+            <path d="M2 12h3" /><path d="M19 12h3" />
+            <path d="M4.2 4.2l2.1 2.1" /><path d="M17.7 17.7l2.1 2.1" />
+            <path d="M4.2 19.8l2.1-2.1" /><path d="M17.7 6.3l2.1-2.1" />
+          </g>
+        </svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+          <path d="M21 13.5A9 9 0 1 1 10.5 3a7 7 0 0 0 10.5 10.5Z" fill="currentColor" />
+        </svg>
+        <svg class="icon-system" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+          <rect x="3" y="4" width="18" height="13" rx="2"
+                stroke="currentColor" stroke-width="2" fill="none" />
+          <path d="M8 20h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+      </button>
+    </div>
+  </header>
+</body>
+</html>

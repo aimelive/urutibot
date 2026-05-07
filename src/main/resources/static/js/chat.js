@@ -1,12 +1,9 @@
 (function () {
   "use strict";
 
-  /* =========================================================
-       Theme toggle (light → dark → system)
-       Pre-paint script in <head> already set data-theme.
-       This handles user clicks and OS-preference changes while
-       in 'system' mode.
-       ========================================================= */
+  const { api, state, on, emit, util, toast } = window.UrutiBot;
+
+  /* ---------- Theme toggle (legacy header button) ---------- */
   (function initTheme() {
     const root = document.documentElement;
     const btn = document.getElementById("theme-toggle");
@@ -22,12 +19,10 @@
       root.setAttribute("data-theme", actual);
       root.setAttribute("data-theme-pref", pref);
     };
-
     const readPref = () => {
       const v = localStorage.getItem(STORAGE_KEY);
       return v === "light" || v === "dark" ? v : "system";
     };
-
     if (btn) {
       btn.addEventListener("click", () => {
         const order = ["light", "dark", "system"];
@@ -39,7 +34,6 @@
         btn.setAttribute("aria-label", "Theme: " + next + ". Click to change.");
       });
     }
-
     const mq = window.matchMedia("(prefers-color-scheme: dark)");
     const onMqChange = () => {
       if (readPref() === "system") apply("system");
@@ -48,23 +42,7 @@
     else if (mq.addListener) mq.addListener(onMqChange);
   })();
 
-  /* =========================================================
-       Tiny markdown renderer (paragraphs, **bold**, lists, links).
-       HTML is escaped FIRST to prevent XSS.
-       ========================================================= */
-  function escapeHtml(s) {
-    return s.replace(
-      /[&<>"']/g,
-      (c) =>
-        ({
-          "&": "&amp;",
-          "<": "&lt;",
-          ">": "&gt;",
-          '"': "&quot;",
-          "'": "&#39;",
-        })[c],
-    );
-  }
+  /* ---------- Markdown ---------- */
   function inlineMd(s) {
     s = s.replace(
       /\[([^\]]+)\]\((https?:\/\/[^\s)]+|mailto:[^\s)]+|tel:[^\s)]+)\)/g,
@@ -77,12 +55,11 @@
     return s;
   }
   function renderMarkdown(text) {
-    const escaped = escapeHtml(text);
+    const escaped = util.escapeHtml(text);
     const lines = escaped.split("\n");
     const out = [];
     let para = [];
     let list = null;
-
     const flushPara = () => {
       if (para.length) {
         out.push("<p>" + inlineMd(para.join(" ")) + "</p>");
@@ -95,7 +72,6 @@
         list = null;
       }
     };
-
     for (const raw of lines) {
       const line = raw.trim();
       if (line === "") {
@@ -131,49 +107,31 @@
     return out.join("");
   }
 
-  /* =========================================================
-       Session persistence
-       ========================================================= */
-  const STORAGE_KEY = "urutibot.session";
-
-  function loadSession() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return null;
-      const parsed = JSON.parse(raw);
-      if (!parsed || !parsed.memoryId) return null;
-      return parsed;
-    } catch (e) {
-      return null;
-    }
-  }
-  // Persistence policy: the memoryId (email) and a short trailing message
-  // history are kept in localStorage indefinitely, so a returning visitor
-  // skips the email gate and resumes the same server-side conversation
-  // memory. The user can wipe both with "Start new conversation".
-  function saveSession(s) {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
-    } catch (e) {}
-  }
-  function clearSession() {
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch (e) {}
+  /* ---------- Auth-required cue detection ---------- */
+  // Bot tools return {requiresAuth:true} when the user is anonymous and
+  // tries to use a privileged action; the LLM then phrases this back to
+  // the user. We scan the rendered text for typical phrases and surface
+  // an inline auth CTA so the user can sign in without leaving chat.
+  const AUTH_CUES = [
+    /\blog ?in\b/i,
+    /\bsign ?in\b/i,
+    /\bcreate (?:an )?account\b/i,
+    /\bregister\b/i,
+    /\blog into your account\b/i,
+    /\bmust be (?:logged in|authenticated)\b/i,
+    /\brequires? (?:authentication|an account)\b/i,
+    /\bauthenticate\b/i,
+  ];
+  function looksLikeAuthRequired(text) {
+    if (!text) return false;
+    const sample = text.slice(0, 1200);
+    let hits = 0;
+    for (const re of AUTH_CUES) if (re.test(sample)) hits++;
+    return hits >= 1;
   }
 
-  function emailValid(s) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
-  }
-
-  /* =========================================================
-       Chat controller - wired against the single chat card on
-       the page. The chat card IS the page, not a widget.
-       ========================================================= */
+  /* ---------- Controller ---------- */
   function setupChat(root) {
-    const prechat = root.querySelector("[data-chat-prechat]");
-    const prechatErr = root.querySelector("[data-chat-prechat-error]");
-    const emailInput = root.querySelector("[data-chat-email]");
     const conversation = root.querySelector("[data-chat-conversation]");
     const log = root.querySelector("[data-chat-log]");
     const errBox = root.querySelector("[data-chat-error]");
@@ -184,146 +142,176 @@
     const sendBtn = root.querySelector("[data-chat-send]");
     const stopBtn = root.querySelector("[data-chat-stop]");
     const resetBtn = root.querySelector("[data-chat-reset]");
-    const emailDisplay = root.querySelector("[data-chat-email-display]");
-    const emailSep = root.querySelector("[data-chat-email-sep]");
+    const statusText = root.querySelector("[data-chat-status-text]");
+    const anonHint = root.querySelector("[data-anon-hint]");
 
-    const GREETING =
+    function refreshAnonHint() {
+      // Only visible while signed-out - surfaces the "this chat won't be
+      // saved" rule so anonymous visitors aren't surprised on refresh.
+      if (anonHint) anonHint.hidden = state.isAuthenticated();
+    }
+    refreshAnonHint();
+    on("auth-changed", refreshAnonHint);
+
+    const GREETING_ANON =
       "Hello! I'm UrutiBot, your assistant from UrutiHub. " +
-      "Would you like to book an appointment with our team, " +
-      "or do you have a question about our services or pricing?";
+      "Ask me anything about our services, pricing, or working hours - " +
+      "I'm happy to help.";
+    const GREETING_AUTH = (name) =>
+      "Welcome back" +
+      (name ? ", **" + name.split(" ")[0] + "**" : "") +
+      "! I'm UrutiBot. Would you like to book a new appointment, " +
+      "review your existing ones, or ask about our services?";
 
-    const state = {
-      memoryId: null,
-      history: [], // [{role:'user'|'bot', text}]
+    const ctrl = {
       streaming: false,
       controller: null,
       pendingBot: null,
       lastUserMsg: null,
+      lastWire: null,
+      authRetryQueued: false,
     };
 
-    // ---- restore session if present ----
-    const saved = loadSession();
-    if (saved && emailValid(saved.memoryId)) {
-      state.memoryId = saved.memoryId;
-      state.history = Array.isArray(saved.history) ? saved.history : [];
-      updateHeader();
-      showConversation();
-      renderHistory();
-    } else {
-      updateHeader();
-      // First-time visitor - focus email field
-      setTimeout(() => emailInput && emailInput.focus(), 80);
-    }
-
-    // Reflect the current memoryId in the chat card header.
-    function updateHeader() {
-      if (state.memoryId) {
-        emailDisplay.textContent = state.memoryId;
-        emailDisplay.hidden = false;
-        if (emailSep) emailSep.hidden = false;
-        resetBtn.hidden = false;
-      } else {
-        emailDisplay.textContent = "";
-        emailDisplay.hidden = true;
-        if (emailSep) emailSep.hidden = true;
-        resetBtn.hidden = true;
-      }
-    }
-
-    function showConversation() {
-      prechat.hidden = true;
-      conversation.hidden = false;
-      setTimeout(() => input && input.focus(), 50);
-    }
-    function showPrechat() {
-      conversation.hidden = true;
-      prechat.hidden = false;
-      setTimeout(() => emailInput && emailInput.focus(), 50);
-    }
-
-    function renderHistory() {
-      log.innerHTML = "";
-      state.history.forEach((m) => appendMessage(m.role, m.text));
-      log.scrollTop = log.scrollHeight;
-    }
-
-    function appendMessage(role, text) {
+    /* ---------- bubble + typewriter ---------- */
+    function appendUserBubble(text) {
       const div = document.createElement("div");
-      div.className = "bubble bubble--" + (role === "user" ? "user" : "bot");
-      if (role === "user") {
-        div.textContent = text;
-      } else {
-        div.innerHTML = renderMarkdown(text);
-      }
+      div.className = "bubble bubble--user";
+      div.textContent = text;
       log.appendChild(div);
-      log.scrollTop = log.scrollHeight;
+      scrollLog();
       return div;
     }
-
-    function addUserMessage(text) {
-      state.history.push({ role: "user", text });
-      persist();
-      return appendMessage("user", text);
+    function appendBotBubble(text) {
+      const div = document.createElement("div");
+      div.className = "bubble bubble--bot";
+      div.innerHTML = renderMarkdown(text);
+      log.appendChild(div);
+      scrollLog();
+      return div;
     }
-
-    function addBotMessage(text) {
-      state.history.push({ role: "bot", text });
-      persist();
-      return appendMessage("bot", text);
-    }
-
-    // Play a fully-known message (e.g. the local greeting) through the
-    // streaming + typewriter path, no network round-trip. Pre-fills `raw`
-    // and goes straight to finalize - which persists history immediately
-    // and defers the visual commit until the typer has drained.
-    function typeBotMessage(text) {
-      const bubble = startBotBubble();
-      bubble.raw = text;
-      finalizeBotBubble(bubble, false);
+    function scrollLog() {
+      log.scrollTop = log.scrollHeight;
     }
 
     function startBotBubble() {
       const wrap = document.createElement("div");
       wrap.className = "bubble bubble--bot bubble--streaming";
       wrap.setAttribute("aria-busy", "true");
-
-      // Streaming bubble has two slots: a text container that grows with
-      // tokens, and a trailing typing indicator that stays visible until
-      // finalize. Before the first token, the text slot is empty so the
-      // dots read as "thinking"; after, they read as "still generating".
       const textEl = document.createElement("div");
       textEl.className = "bubble-text";
-
       const typing = document.createElement("span");
       typing.className = "typing";
       typing.setAttribute("aria-label", "UrutiBot is typing");
       typing.innerHTML = "<span></span><span></span><span></span>";
-
       wrap.appendChild(textEl);
       wrap.appendChild(typing);
       log.appendChild(wrap);
-      log.scrollTop = log.scrollHeight;
+      scrollLog();
       return {
         el: wrap,
         textEl,
         typing,
-        raw: "", // characters received from the network
-        displayed: "", // characters painted to the DOM (typewriter cursor)
-        typerHandle: null, // setTimeout id for the typewriter loop
-        streamDone: false, // SSE `done` (or terminal error/abort) seen
+        raw: "",
+        displayed: "",
+        typerHandle: null,
+        streamDone: false,
         aborted: false,
-        persisted: false, // bot turn pushed to state.history
-        pendingFinalize: null, // commit fn deferred until typer drains
+        pendingFinalize: null,
       };
     }
 
-    function persist() {
-      const tail = state.history.slice(-30);
-      saveSession({ memoryId: state.memoryId, history: tail });
+    const TYPER_TICK_MS = 22;
+    function chunkSizeFor(remaining, streamDone) {
+      let n = 1;
+      if (remaining > 280) n = 12;
+      else if (remaining > 120) n = 5;
+      else if (remaining > 40) n = 2;
+      if (streamDone && remaining > 8) n = Math.max(n, 3);
+      return n;
+    }
+    function scheduleTyper(b) {
+      if (b.typerHandle != null) return;
+      b.typerHandle = setTimeout(() => typerTick(b), TYPER_TICK_MS);
+    }
+    function typerTick(b) {
+      b.typerHandle = null;
+      if (!b.el.isConnected) return;
+      const remaining = b.raw.length - b.displayed.length;
+      if (remaining <= 0) {
+        if (b.streamDone && b.pendingFinalize) {
+          const c = b.pendingFinalize;
+          b.pendingFinalize = null;
+          c();
+        }
+        return;
+      }
+      const step = chunkSizeFor(remaining, b.streamDone);
+      b.displayed = b.raw.slice(0, b.displayed.length + step);
+      b.textEl.innerHTML = renderMarkdown(b.displayed);
+      scrollLog();
+      b.typerHandle = setTimeout(() => typerTick(b), TYPER_TICK_MS);
+    }
+    function appendToken(b, token) {
+      b.raw += token;
+      scheduleTyper(b);
+    }
+    function finalizeBubble(b, aborted) {
+      if (!b || !b.el) return;
+      b.streamDone = true;
+      b.aborted = aborted;
+      const raw = b.raw;
+      const commit = () => {
+        if (b.typerHandle != null) {
+          clearTimeout(b.typerHandle);
+          b.typerHandle = null;
+        }
+        if (b.typing && b.typing.parentNode) {
+          b.typing.remove();
+          b.typing = null;
+        }
+        b.el.removeAttribute("aria-busy");
+        b.el.classList.remove("bubble--streaming");
+        if (raw.trim()) {
+          b.el.innerHTML = renderMarkdown(raw);
+          if (aborted) {
+            const note = document.createElement("span");
+            note.className = "bubble-stopped";
+            note.textContent = "stopped";
+            b.el.appendChild(note);
+          }
+          // Inline auth CTA when bot signaled login is required. The initial
+          // greeting bubble opts out via b.skipAuthCta - we mention sign-in
+          // there as informational text, not as a call-to-action that needs
+          // its own card.
+          if (!b.skipAuthCta) maybeAttachAuthCta(b.el, raw);
+        } else {
+          b.el.remove();
+        }
+      };
+      if (aborted || b.displayed.length >= b.raw.length) commit();
+      else {
+        b.pendingFinalize = commit;
+        scheduleTyper(b);
+      }
     }
 
+    function maybeAttachAuthCta(bubbleEl, text) {
+      if (state.isAuthenticated()) return;
+      if (!looksLikeAuthRequired(text)) return;
+      // Only one CTA per bubble.
+      if (bubbleEl.querySelector(".inline-auth")) return;
+      window.UrutiBot.auth.renderInlineAuthPrompt(bubbleEl, {
+        title: "Sign in to continue",
+        message:
+          "Booking, viewing, or cancelling appointments requires an UrutiHub account. Sign in or create one and I'll pick up right where we left off.",
+      });
+      ctrl.authRetryQueued = true; // queue retry of last user msg post-login
+      scrollLog();
+    }
+
+    /* ---------- composer ---------- */
     function setStreaming(on) {
-      state.streaming = on;
+      ctrl.streaming = on;
       if (on) {
         input.setAttribute("disabled", "");
         sendBtn.hidden = true;
@@ -335,143 +323,149 @@
         setTimeout(() => input && input.focus(), 30);
       }
     }
-
-    function showError(message) {
-      errMsg.textContent = message;
+    function showError(msg) {
+      errMsg.textContent = msg;
       errBox.hidden = false;
     }
     function hideError() {
       errBox.hidden = true;
     }
 
-    // ---- pre-chat submit ----
-    prechat.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const value = (emailInput.value || "").trim();
-      if (!emailValid(value)) {
-        prechatErr.hidden = false;
-        prechatErr.textContent = "Please enter a valid email address.";
-        emailInput.setAttribute("aria-invalid", "true");
+    /* ---------- send / SSE ---------- */
+    async function sendMessage(text) {
+      ctrl.lastUserMsg = text;
+      appendUserBubble(text);
+      ctrl.lastWire = text;
+
+      // Short-circuit: an anonymous user typing "I want to log in" gets the
+      // CTA card straight away - no LLM call. Routing through the model
+      // would produce contradictory output (it'd say "I can't sign you in"
+      // right above the Sign in button), and a wordy answer when the action
+      // is one click away.
+      if (!state.isAuthenticated() && isLoginOnlyIntent(text)) {
+        const bubble = appendBotBubble(
+          "Sure! Sign in or create an account below - I'll pick up right where we left off.",
+        );
+        if (
+          window.UrutiBot.auth &&
+          window.UrutiBot.auth.renderInlineAuthPrompt
+        ) {
+          window.UrutiBot.auth.renderInlineAuthPrompt(bubble, {
+            title: "Sign in to continue",
+            message:
+              "Booking, viewing, or cancelling appointments requires an UrutiHub account.",
+          });
+        }
+        ctrl.authRetryQueued = true; // post-login local welcome will fire
+        scrollLog();
         return;
       }
-      prechatErr.hidden = true;
-      emailInput.removeAttribute("aria-invalid");
-      state.memoryId = value;
-      state.history = [];
-      persist();
-      updateHeader();
-      showConversation();
-      renderHistory();
 
-      // Warm static greeting in the bot's voice - single source of truth.
-      // Avoids an extra round-trip and pollutes server-side memory with a
-      // non-user "hello" we'd then have to filter. Routed through the
-      // streaming path (raw pre-filled, no network) so the typewriter
-      // animation runs identically to a real reply.
-      typeBotMessage(GREETING);
-    });
-
-    // ---- composer ----
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      sendCurrent();
-    });
-
-    input.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        sendCurrent();
+      // Short-circuit: an already-authenticated user typing "I want to log in"
+      // (or the FR/RW equivalents) gets a local reply. The bot would say the
+      // same thing - saves the LLM round-trip + ~2K tokens per occurrence.
+      // The system prompt's auth_context already handles this correctly when
+      // the message slips past the heuristic, so a miss is harmless.
+      if (state.isAuthenticated() && isLoginOnlyIntent(text)) {
+        const auth = state.getAuth();
+        const firstName =
+          auth && auth.user && auth.user.fullName
+            ? auth.user.fullName.split(/\s+/)[0]
+            : null;
+        appendBotBubble(
+          "You're already signed in" +
+            (firstName ? " as **" + firstName + "**" : "") +
+            ". Would you like to **book an appointment**, " +
+            "**review your existing ones**, or ask about our services?",
+        );
+        return;
       }
-    });
 
-    input.addEventListener("input", () => {
-      input.style.height = "auto";
-      input.style.height = Math.min(input.scrollHeight, 140) + "px";
-    });
+      // Short-circuit: "log me out" - there's no LLM tool for this, so route
+      // straight through the existing logout() which wipes server-side
+      // history, clears the JWT, and emits auth-changed (the chat.js
+      // listener then rotates memoryId + re-renders the anon greeting).
+      if (state.isAuthenticated() && isLogoutIntent(text)) {
+        appendBotBubble("Signing you out…");
+        if (window.UrutiBot.auth && window.UrutiBot.auth.logout) {
+          window.UrutiBot.auth.logout();
+        }
+        return;
+      }
 
-    function sendCurrent() {
-      if (state.streaming) return;
-      const text = (input.value || "").trim();
-      if (!text) return;
-      input.value = "";
-      input.style.height = "auto";
-      hideError();
-      sendMessage(text);
-    }
-
-    async function sendMessage(text) {
-      state.lastUserMsg = text;
-      addUserMessage(text);
-
-      // The bot only sees `memoryId` as an opaque conversation key, not as
-      // the user's email. So on the first user turn of this client session
-      // we silently include the email as inline context- once it lands in
-      // the server-side chat memory (keyed by memoryId), the bot can answer
-      // "check my appointments" etc. without re-asking. The displayed
-      // bubble shows only the text the user typed.
-      const userTurns = state.history.filter((m) => m.role === "user").length;
-      const wire =
-        userTurns === 1
-          ? "(Context for the assistant- not part of my question: my email is " +
-            state.memoryId +
-            ". Please use this email for any appointment lookups, bookings, or cancellations without asking me to repeat it.)\n\n" +
-            text
-          : text;
-
-      state.lastWire = wire;
-      await streamReply(wire);
+      await streamReply(text);
     }
 
     async function streamReply(text) {
+      hideError();
       const bubble = startBotBubble();
-      state.pendingBot = bubble;
+      ctrl.pendingBot = bubble;
       setStreaming(true);
 
       const controller = new AbortController();
-      state.controller = controller;
+      ctrl.controller = controller;
+
+      const auth = state.getAuth();
+      const headers = {
+        "Content-Type": "application/json",
+        Accept: "text/event-stream",
+      };
+      if (auth && auth.token) headers.Authorization = "Bearer " + auth.token;
 
       try {
         const resp = await fetch("/api/chatbot/stream", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "text/event-stream",
-          },
-          body: JSON.stringify({
-            memoryId: state.memoryId,
-            message: text,
-          }),
+          headers,
+          body: JSON.stringify(
+            state.isAuthenticated()
+              ? { message: text }
+              : { memoryId: state.getAnonMemoryId(), message: text },
+          ),
           signal: controller.signal,
         });
 
         if (!resp.ok) {
+          // 401 with a token attached => server rejected the JWT (expired
+          // or invalid). Clear local auth state and trigger the global
+          // session-expired handler in auth.js, which shows a toast and
+          // opens the sign-in modal. Queue this message for re-send so
+          // the user can resume right after re-authenticating.
+          if (resp.status === 401 && auth) {
+            state.clearAuth();
+            ctrl.authRetryQueued = true;
+            emit("session-expired");
+            // Drop the half-rendered bot bubble; the toast is the cue.
+            finalizeBubble(bubble, true);
+            try {
+              if (bubble && bubble.el && bubble.el.parentNode) {
+                bubble.el.parentNode.removeChild(bubble.el);
+              }
+            } catch (e) {}
+            return;
+          }
           let msg = "Request failed (" + resp.status + ").";
           try {
             const data = await resp.json();
             if (data && Array.isArray(data.message))
               msg = data.message.join(" ");
             else if (data && data.message) msg = data.message;
-          } catch (e) {
-            /* ignore parse errors */
-          }
+          } catch (e) {}
           throw new Error(msg);
         }
-
         if (!resp.body || !resp.body.getReader) {
           throw new Error("Streaming not supported in this browser.");
         }
-
         await readSse(resp.body.getReader(), bubble);
       } catch (err) {
         if (err.name === "AbortError") {
-          finalizeBotBubble(bubble, true);
+          finalizeBubble(bubble, true);
         } else {
-          finalizeBotBubble(bubble, false);
+          finalizeBubble(bubble, false);
           showError(err.message || "Network error. Please try again.");
         }
       } finally {
-        state.controller = null;
-        state.pendingBot = null;
+        ctrl.controller = null;
+        ctrl.pendingBot = null;
         setStreaming(false);
       }
     }
@@ -479,12 +473,10 @@
     async function readSse(reader, bubble) {
       const decoder = new TextDecoder("utf-8");
       let buffer = "";
-
       while (true) {
         const { value, done } = await reader.read();
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
-
         let idx;
         while ((idx = buffer.indexOf("\n\n")) !== -1) {
           const frame = buffer.slice(0, idx);
@@ -500,7 +492,7 @@
             }
             appendToken(bubble, token);
           } else if (ev.event === "done") {
-            finalizeBotBubble(bubble, false);
+            finalizeBubble(bubble, false);
             return;
           } else if (ev.event === "error") {
             let msg = "An error occurred while generating a response.";
@@ -508,14 +500,13 @@
               const j = JSON.parse(ev.data);
               if (j && j.message) msg = j.message;
             } catch (e) {}
-            finalizeBotBubble(bubble, false);
+            finalizeBubble(bubble, false);
             showError(msg);
             return;
           }
         }
       }
-      // Stream closed without `done` - finalize whatever we have.
-      finalizeBotBubble(bubble, false);
+      finalizeBubble(bubble, false);
     }
 
     function parseFrame(frame) {
@@ -532,155 +523,251 @@
       return { event, data: dataLines.join("\n") };
     }
 
-    function appendToken(bubble, token) {
-      // Network -> buffer. The typewriter loop is the single writer to the
-      // DOM, so token bursts queue up here instead of flashing all at once.
-      bubble.raw += token;
-      scheduleTyper(bubble);
-    }
-
-    // Tunable typewriter pacing. Adaptive chunk size keeps short replies
-    // feeling typed while preventing long responses from dragging on -
-    // when the buffer is large (network delivered a burst), each tick
-    // emits more characters to catch up.
-    const TYPER_TICK_MS = 22;
-    function chunkSizeFor(remaining, streamDone) {
-      let n = 1;
-      if (remaining > 280) n = 12;
-      else if (remaining > 120) n = 5;
-      else if (remaining > 40) n = 2;
-      // Once the stream is closed, drain a bit more aggressively so the
-      // user isn't left watching a typewriter long after the data arrived.
-      if (streamDone && remaining > 8) n = Math.max(n, 3);
-      return n;
-    }
-
-    function scheduleTyper(bubble) {
-      if (bubble.typerHandle != null) return;
-      bubble.typerHandle = setTimeout(() => typerTick(bubble), TYPER_TICK_MS);
-    }
-
-    function typerTick(bubble) {
-      bubble.typerHandle = null;
-      // Bubble removed from DOM (e.g. user hit "New chat") - drop the loop.
-      if (!bubble.el.isConnected) return;
-
-      const remaining = bubble.raw.length - bubble.displayed.length;
-      if (remaining <= 0) {
-        // Caught up. If the network stream is also done, run the deferred
-        // visual commit (clears the typing dots, swaps in final markdown).
-        if (bubble.streamDone && bubble.pendingFinalize) {
-          const commit = bubble.pendingFinalize;
-          bubble.pendingFinalize = null;
-          commit();
-        }
+    /* ---------- restore history ---------- */
+    async function restoreHistory() {
+      // Anonymous chats are ephemeral - there's nothing to restore from the
+      // server. The tab-scoped memoryId yields a new greeting every load.
+      if (!state.isAuthenticated()) {
+        renderInitialGreeting();
         return;
       }
-
-      const step = chunkSizeFor(remaining, bubble.streamDone);
-      bubble.displayed = bubble.raw.slice(0, bubble.displayed.length + step);
-      bubble.textEl.innerHTML = renderMarkdown(bubble.displayed);
-      log.scrollTop = log.scrollHeight;
-
-      bubble.typerHandle = setTimeout(() => typerTick(bubble), TYPER_TICK_MS);
-    }
-
-    function finalizeBotBubble(bubble, aborted) {
-      if (!bubble || !bubble.el) return;
-      bubble.streamDone = true;
-      bubble.aborted = aborted;
-
-      const raw = bubble.raw;
-
-      // Persist to history *now*, when the network turn ends - not when the
-      // typewriter finishes painting. Otherwise a follow-up user message
-      // sent during playback would slot ahead of this bot turn in history.
-      if (raw.trim() && !bubble.persisted) {
-        bubble.persisted = true;
-        state.history.push({ role: "bot", text: raw });
-        persist();
-      }
-
-      const commit = () => {
-        if (bubble.typerHandle != null) {
-          clearTimeout(bubble.typerHandle);
-          bubble.typerHandle = null;
+      try {
+        const resp = await api.get("/api/chatbot/conversation");
+        // The endpoint returns Spring Data's paged envelope (PagedModel under
+        // VIA_DTO, PageImpl on older builds); both expose the rows under
+        // `content`. Tolerate a bare array in case the endpoint is ever
+        // simplified to List<>.
+        const messages = Array.isArray(resp)
+          ? resp
+          : (resp && resp.content) || [];
+        // SYSTEM/TOOL rows are persisted but never rendered. If the only
+        // surviving rows are non-visible ones the chat would otherwise look
+        // blank, so fall through to the greeting in that case.
+        const visible = messages.filter(
+          (m) =>
+            (m.role === "USER" || m.role === "ASSISTANT") &&
+            (m.content || "").trim(),
+        );
+        if (visible.length === 0) {
+          renderInitialGreeting();
+          return;
         }
-        if (bubble.typing && bubble.typing.parentNode) {
-          bubble.typing.remove();
-          bubble.typing = null;
-        }
-        bubble.el.removeAttribute("aria-busy");
-        bubble.el.classList.remove("bubble--streaming");
-
-        if (raw.trim()) {
-          bubble.el.innerHTML = renderMarkdown(raw);
-          if (aborted) {
-            const note = document.createElement("span");
-            note.className = "bubble-stopped";
-            note.textContent = "stopped";
-            bubble.el.appendChild(note);
+        log.innerHTML = "";
+        visible.forEach((m) => {
+          if (m.role === "USER") {
+            const text = sanitizeUserContextPrefix(m.content || "");
+            if (text.trim()) appendUserBubble(text);
+          } else if (m.role === "ASSISTANT") {
+            if ((m.content || "").trim()) appendBotBubble(m.content);
           }
-        } else {
-          // Nothing arrived (user aborted before first token, etc).
-          bubble.el.remove();
+        });
+        scrollLog();
+      } catch (e) {
+        // 404 / 403 / empty body - fall back to a fresh greeting. The user's
+        // single conversation either doesn't exist yet or the JWT no longer
+        // grants access; either way show them a clean canvas.
+        if (e && (e.status === 404 || e.status === 403)) {
+          renderInitialGreeting();
+          return;
         }
-      };
-
-      // On abort, snap to whatever's been received - don't make the user
-      // wait for a typewriter to finish painting text they just cancelled.
-      // Otherwise, let the typer drain to the end before swapping in the
-      // final markdown (and removing the trailing dots).
-      if (aborted || bubble.displayed.length >= bubble.raw.length) {
-        commit();
-      } else {
-        bubble.pendingFinalize = commit;
-        scheduleTyper(bubble);
+        renderInitialGreeting();
       }
     }
 
-    // ---- stop ----
-    stopBtn.addEventListener("click", () => {
-      if (state.controller) state.controller.abort();
-    });
+    // The chat composer used to inject "(Context for the assistant- not part
+    // of my question: my email is X.)" as a hidden first-turn prefix. We no
+    // longer do this (auth context comes from the JWT), but old sessions may
+    // still contain it - strip it so it never shows up in a restored bubble.
+    function sanitizeUserContextPrefix(text) {
+      const idx = text.indexOf("(Context for the assistant");
+      if (idx === -1) return text;
+      const closeIdx = text.indexOf(")", idx);
+      if (closeIdx === -1) return text;
+      return (text.slice(0, idx) + text.slice(closeIdx + 1)).replace(
+        /^\s+/,
+        "",
+      );
+    }
 
-    // ---- retry ----
+    function renderInitialGreeting() {
+      log.innerHTML = "";
+      const auth = state.getAuth();
+      const greeting =
+        auth && auth.user
+          ? GREETING_AUTH(auth.user.fullName || auth.user.email)
+          : GREETING_ANON;
+      const bubble = startBotBubble();
+      bubble.raw = greeting;
+      // The greeting mentions sign-in for context, but it isn't a privileged
+      // action being blocked - no inline CTA card on this bubble.
+      bubble.skipAuthCta = true;
+      finalizeBubble(bubble, false);
+    }
+
+    /* ---------- composer events ---------- */
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      sendCurrent();
+    });
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendCurrent();
+      }
+    });
+    input.addEventListener("input", () => {
+      input.style.height = "auto";
+      input.style.height = Math.min(input.scrollHeight, 140) + "px";
+    });
+    function sendCurrent() {
+      if (ctrl.streaming) return;
+      const text = (input.value || "").trim();
+      if (!text) return;
+      input.value = "";
+      input.style.height = "auto";
+      hideError();
+      sendMessage(text);
+    }
+
+    stopBtn.addEventListener("click", () => {
+      if (ctrl.controller) ctrl.controller.abort();
+    });
     retryBtn.addEventListener("click", () => {
       hideError();
-      if (state.streaming) return;
-      // Replay the exact wire payload of the failed attempt- preserves the
-      // first-turn email context if the original send never reached the server.
-      const replay = state.lastWire || state.lastUserMsg;
+      if (ctrl.streaming) return;
+      const replay = ctrl.lastWire || ctrl.lastUserMsg;
       if (replay) streamReply(replay);
     });
 
-    // ---- reset ----
     resetBtn.addEventListener("click", () => {
-      // The reset is destructive: it wipes the message history and the
-      // memoryId from localStorage and the current view. Make this
-      // explicit before doing it so the click is intentional.
       const ok = window.confirm(
         "Start a new conversation?\n\n" +
           "This permanently clears the current chat history. " +
           "It can't be undone.",
       );
       if (!ok) return;
-      if (state.streaming && state.controller) state.controller.abort();
-      state.history = [];
-      state.memoryId = null;
-      state.lastUserMsg = null;
-      state.lastWire = null;
+      newConversation();
+    });
+
+    function newConversation() {
+      if (ctrl.streaming && ctrl.controller) ctrl.controller.abort();
+
+      // Authenticated: wipe the user's persisted conversation server-side.
+      // Anonymous: rotate the tab key so the next turn opens a brand-new
+      // server-side window. Fire-and-forget on the auth path; non-fatal.
+      if (state.isAuthenticated()) {
+        api
+          .delete("/api/chatbot/conversation")
+          .catch((e) =>
+            console.warn("Failed to clear conversation on server:", e),
+          );
+      } else {
+        state.rotateAnonMemoryId();
+      }
+
+      ctrl.lastUserMsg = null;
+      ctrl.lastWire = null;
+      ctrl.authRetryQueued = false;
       log.innerHTML = "";
       hideError();
-      clearSession();
-      // Clear email field so the user re-confirms
-      if (emailInput) emailInput.value = "";
-      updateHeader();
-      showPrechat();
+      renderInitialGreeting();
+    }
+
+    /* ---------- auth events ---------- */
+    function clearInlineAuthCtas() {
+      // The user is now signed in - every "Sign in / Create account" CTA
+      // attached to past bot bubbles is now stale and clicking it would be
+      // confusing. Strip them all in one pass.
+      log.querySelectorAll(".inline-auth").forEach((el) => el.remove());
+    }
+
+    // A short message whose only intent is "let me sign in" / "register me"
+    // (English / French / Kinyarwanda). When it matches, there's no real
+    // tool action to resume after login - we skip the LLM round-trip and
+    // show a local welcome bubble instead.
+    const LOGIN_ONLY_PATTERNS = [
+      /^\s*(i\s+(want|need|would\s+like)\s+to\s+|let\s+me\s+|please\s+|can\s+i\s+|how\s+do\s+i\s+)?(log\s*[\-\s]?in|sign\s*[\-\s]?in|sign\s*up|signup|register|create\s+(an?\s+)?account)\s*[?.!]?\s*$/i,
+      /^\s*(je\s+(veux|voudrais|souhaite)\s+|laisse[z]?\s+moi\s+|s'il\s+vous\s+pla[iî]t\s+)?(me\s+)?(connecter|inscrire|cr[eé]er\s+(un\s+)?compte|s'identifier)\s*[?.!]?\s*$/i,
+      /^\s*(ndashaka\s+|nshaka\s+|reka\s+(n)?|nyemerera\s+)?(kwinjira|kwiyandikisha|gufungura\s+konti)\s*[?.!]?\s*$/i,
+    ];
+    function isLoginOnlyIntent(msg) {
+      if (!msg) return false;
+      const t = msg.trim();
+      if (t.length > 80) return false; // long messages likely have other intent
+      return LOGIN_ONLY_PATTERNS.some((re) => re.test(t));
+    }
+
+    // Counterpart for "log me out" / "sign me out" / FR / RW. When a signed-in
+    // user types one of these we run the actual logout flow client-side
+    // instead of routing through the LLM (which has no logout tool anyway).
+    const LOGOUT_PATTERNS = [
+      /^\s*(please\s+|can\s+you\s+|could\s+you\s+|now\s+)?(log\s*[\-\s]?(me\s+)?out|sign\s*[\-\s]?(me\s+)?out|signout|logout|end\s+(my\s+)?session)\s*[?.!]?\s*$/i,
+      /^\s*(s'il\s+vous\s+pla[iî]t\s+)?(me\s+)?(d[eé]connect(er|e[rz]?)|fermer\s+(ma\s+)?session|d[eé]connexion)\s*[?.!]?\s*$/i,
+      /^\s*(ndashaka\s+|nshaka\s+|reka\s+(n)?)?(gusohoka|kuvayo|kuvayo\s+muri\s+konti|gufunga\s+konti)\s*[?.!]?\s*$/i,
+    ];
+    function isLogoutIntent(msg) {
+      if (!msg) return false;
+      const t = msg.trim();
+      if (t.length > 60) return false;
+      return LOGOUT_PATTERNS.some((re) => re.test(t));
+    }
+
+    on("auth-success", () => {
+      // Stale CTAs first.
+      clearInlineAuthCtas();
+
+      // Sign-in starts a fresh persisted thread (the state layer already
+      // rotated memoryId on the auth transition). Anonymous turns are gone
+      // - the model has no memory of them. If the user had a pending
+      // action queued, replay it as the first message of the new thread so
+      // it picks up naturally with auth context.
+      const auth = state.getAuth();
+      const firstName =
+        auth && auth.user && auth.user.fullName
+          ? auth.user.fullName.split(/\s+/)[0]
+          : null;
+
+      const pending = ctrl.authRetryQueued ? ctrl.lastUserMsg : null;
+      ctrl.authRetryQueued = false;
+      ctrl.lastUserMsg = null;
+      ctrl.lastWire = null;
+
+      log.innerHTML = "";
+      hideError();
+
+      if (pending && !isLoginOnlyIntent(pending)) {
+        toast("Welcome back! Continuing your request…", { variant: "info" });
+        appendUserBubble(pending);
+        streamReply(pending);
+        return;
+      }
+
+      toast("You're signed in.", { variant: "success" });
+      appendBotBubble(
+        "Welcome" +
+          (firstName ? ", **" + firstName + "**" : "") +
+          "! You're signed in. Would you like to **book an appointment**, " +
+          "**review your existing ones**, or ask about our services?",
+      );
     });
+    on("auth-changed", () => {
+      // Logout - the state layer already rotated memoryId. Drop the visible
+      // history so the next anonymous turn doesn't appear to inherit the
+      // signed-in context.
+      if (!state.isAuthenticated()) {
+        ctrl.lastUserMsg = null;
+        ctrl.lastWire = null;
+        ctrl.authRetryQueued = false;
+        log.innerHTML = "";
+        hideError();
+        renderInitialGreeting();
+      }
+    });
+
+    /* ---------- boot ---------- */
+    restoreHistory();
   }
 
-  // Bootstrap once the DOM is parsed (script is deferred, so we can run now).
   const card = document.querySelector(".chat-card");
   if (card) setupChat(card);
 })();

@@ -1,0 +1,42 @@
+/* ---------- responsive overrides ---------- */
+@media (max-width: 640px) {
+  .header-actions {
+    gap: 0.4rem;
+  }
+  .user-name {
+    max-width: 70px;
+  }
+  .modal-panel {
+    padding: 1.5rem 1.1rem 1.2rem;
+    border-radius: 16px;
+  }
+  .modal-panel--wide {
+    max-width: 100%;
+  }
+  .toast-root {
+    left: 1rem;
+    right: 1rem;
+    max-width: none;
+  }
+  .apt-card-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+  }
+}
+
+/* ---------- reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+  .stage {
+    animation: none;
+  }
+}

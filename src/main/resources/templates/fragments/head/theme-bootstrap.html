@@ -1,0 +1,27 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <th:block th:fragment="theme-init">
+      <script>
+        (function () {
+          try {
+            var stored = localStorage.getItem("urutibot.theme");
+            var pref =
+              stored === "light" || stored === "dark" ? stored : "system";
+            var actual =
+              pref === "system"
+                ? window.matchMedia("(prefers-color-scheme: dark)").matches
+                  ? "dark"
+                  : "light"
+                : pref;
+            document.documentElement.setAttribute("data-theme", actual);
+            document.documentElement.setAttribute("data-theme-pref", pref);
+          } catch (e) {
+            document.documentElement.setAttribute("data-theme", "light");
+            document.documentElement.setAttribute("data-theme-pref", "system");
+          }
+        })();
+      </script>
+    </th:block>
+  </head>
+</html>

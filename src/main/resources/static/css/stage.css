@@ -1,0 +1,79 @@
+/* ---------- main / stage ---------- */
+.page-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.25rem;
+}
+.stage {
+  width: 100%;
+  max-width: 680px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  animation: rise 0.45s ease-out both;
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- welcome block ---------- */
+.welcome {
+  text-align: center;
+  display: grid;
+  gap: 0.5rem;
+  justify-items: center;
+  padding: 0 0.5rem;
+}
+.welcome-logo {
+  margin: 0;
+  margin-bottom: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  animation: fade-up 0.6s 0.1s ease-out both;
+}
+.welcome-logo img {
+  display: block;
+  height: clamp(32px, 5vw, 48px);
+  width: auto;
+  max-width: 100%;
+  transition:
+    transform 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.4),
+    filter 0.4s ease;
+}
+.welcome-logo img:hover {
+  transform: scale(1.03) translateY(-2px);
+  filter: drop-shadow(
+    0 10px 24px color-mix(in srgb, var(--brand) 35%, transparent)
+  );
+}
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.welcome-sub {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 1.02rem;
+  max-width: 48ch;
+  line-height: 1.55;
+  /* Delay so the logo lands first - reads as a deliberate cascade. */
+  animation: fade-up 0.6s 0.25s ease-out both;
+}
+

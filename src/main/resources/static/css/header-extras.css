@@ -1,0 +1,218 @@
+/* ============================================================
+   Auth + Appointments + Modals + Toast
+   Added for the auth-aware frontend rewrite.
+   ============================================================ */
+
+/* ---------- header actions ---------- */
+.header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.auth-buttons {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.btn-ghost {
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.55rem 0.95rem;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text);
+  border-radius: 12px;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease;
+}
+.btn-ghost:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.btn-pill {
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.55rem 1.05rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--brand) 60%, transparent);
+  background: linear-gradient(
+    135deg,
+    var(--brand) 0%,
+    var(--brand-strong) 100%
+  );
+  color: var(--on-brand);
+  cursor: pointer;
+  box-shadow: var(--shadow-brand);
+  transition:
+    filter 0.18s ease,
+    transform 0.08s ease;
+}
+.btn-pill:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+.btn-pill:active {
+  transform: translateY(0);
+}
+
+.btn-ghost-danger {
+  font: inherit;
+  font-weight: 600;
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--danger) 35%, var(--border));
+  color: var(--danger);
+  border-radius: 12px;
+  padding: 0.45rem 0.85rem;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease;
+  font-size: 0.85rem;
+}
+.btn-ghost-danger:hover {
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+}
+
+.btn-block {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+}
+
+/* ---------- user menu ---------- */
+/* z-index 1000 promotes the user-menu above the chat-card, which establishes
+   its own stacking context via `isolation: isolate` and would otherwise paint
+   over our popover regardless of the popover's local z-index. */
+.user-menu {
+  position: relative;
+  z-index: 1000;
+}
+.user-menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.65rem 0.4rem 0.45rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  font: inherit;
+  color: var(--text);
+  transition:
+    background 0.18s,
+    border-color 0.18s;
+}
+.user-menu-trigger:hover {
+  background: var(--surface-2);
+  border-color: color-mix(in srgb, var(--brand) 30%, var(--border));
+}
+.user-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    var(--brand) 0%,
+    var(--brand-strong) 100%
+  );
+  color: var(--on-brand);
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.02em;
+}
+.user-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.user-menu-popover {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  min-width: 240px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-lg);
+  padding: 0.5rem;
+  z-index: 60;
+  animation: pop-in 0.18s ease-out both;
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.user-menu-header {
+  padding: 0.65rem 0.75rem 0.55rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0.35rem;
+}
+.user-menu-name {
+  font-weight: 650;
+  font-size: 0.95rem;
+}
+.user-menu-email {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.user-menu-roles {
+  font-size: 0.72rem;
+  color: var(--brand-strong);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-top: 0.15rem;
+}
+.user-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  background: transparent;
+  border: 0;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.92rem;
+  text-align: left;
+  cursor: pointer;
+}
+.user-menu-item:hover {
+  background: var(--surface-2);
+}
+.user-menu-item.user-menu-danger {
+  color: var(--danger);
+}
+.user-menu-sep {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 0.35rem 0;
+}
+
+/* Hide legacy stand-alone theme toggle when user-menu is visible (auth) */
+.user-menu:not([hidden]) ~ .theme-toggle {
+  display: none;
+}
+

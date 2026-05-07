@@ -1,0 +1,51 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+  <div
+    th:fragment="create-appointment-modal"
+    class="modal"
+    data-modal="create-appointment"
+    hidden
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="create-apt-title"
+  >
+    <div class="modal-backdrop" data-modal-close></div>
+    <div class="modal-panel">
+      <button type="button" class="modal-close" data-modal-close aria-label="Close">
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18" stroke="currentColor"
+                stroke-width="2.2" stroke-linecap="round" />
+        </svg>
+      </button>
+
+      <h2 class="modal-title" id="create-apt-title">Book an appointment</h2>
+      <p class="modal-subtitle">
+        Tell us what you'd like to discuss and pick a time.
+      </p>
+
+      <form class="auth-form" data-create-apt-form novalidate>
+        <label class="field">
+          <span class="field-label">Purpose</span>
+          <input
+            type="text"
+            name="purpose"
+            required
+            maxlength="500"
+            placeholder="e.g. Free consultation about a web app"
+          />
+        </label>
+        <label class="field">
+          <span class="field-label">Date &amp; time</span>
+          <input type="datetime-local" name="dateTime" required />
+        </label>
+        <p class="form-error" data-create-apt-error hidden role="alert"></p>
+        <button type="submit" class="btn btn-primary btn-block" data-create-apt-submit>
+          <span class="btn-label">Confirm booking</span>
+          <span class="spinner" hidden></span>
+        </button>
+      </form>
+    </div>
+  </div>
+</body>
+</html>
