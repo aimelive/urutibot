@@ -1,32 +1,51 @@
 package com.aimelive.urutibot.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
+import jakarta.persistence.*;
+import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
-@Document(collection = "appointments")
+@Entity
+@Table(name = "appointments", indexes = {
+        @Index(name = "idx_appointments_user_datetime", columnList = "user_id,date_time"),
+        @Index(name = "idx_appointments_status_datetime", columnList = "status,date_time")
+})
+@EntityListeners(AuditingEntityListener.class)
+@Getter
+@Setter
+@NoArgsConstructor
 @AllArgsConstructor
-@Data
 @Builder
 public class Appointment {
+
     @Id
-    private String id;
-    private String fullName;
-    private String email;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @Column(name = "date_time", nullable = false)
     private LocalDateTime dateTime;
+
+    @Column(nullable = false, length = 1000)
     private String purpose;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 32)
     private Status status;
 
     @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @LastModifiedDate
+    @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
     public enum Status {
@@ -35,11 +54,6 @@ public class Appointment {
         CANCELLED
     }
 
-    /**
-     * Get the status as a lowercase string for CSS classes
-     * 
-     * @return lowercase status string
-     */
     public String getStatusLower() {
         return status != null ? status.name().toLowerCase() : "";
     }

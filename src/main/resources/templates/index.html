@@ -14,8 +14,6 @@
 
     <link rel="canonical" href="https://urutibot.aimelive.com/" />
 
-    <!-- Open Graph: Facebook, LinkedIn, Slack, iMessage, Discord all read
-         these. Image must be an absolute URL or crawlers silently drop it. -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="UrutiHub" />
     <meta property="og:url" content="https://urutibot.aimelive.com/" />
@@ -59,9 +57,6 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
 
-    <!-- Schema.org structured data: helps Google build a knowledge entry,
-         pick the right brand name, and render sitelinks. WebApplication
-         marks this as a usable tool, not just a marketing page. -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -105,7 +100,6 @@
       }
     </script>
 
-    <!-- Pre-paint theme: prevent flash by setting data-theme before stylesheets evaluate -->
     <script>
       (function () {
         try {
@@ -127,7 +121,6 @@
       })();
     </script>
 
-    <!-- Inline critical CSS so the first paint is correct without a network round-trip -->
     <style>
       :root {
         --brand: #008685;
@@ -162,13 +155,8 @@
         --shadow: 0 6px 24px rgba(0, 0, 0, 0.5);
         --shadow-lg: 0 24px 48px -12px rgba(0, 0, 0, 0.6);
       }
-      *,
-      *::before,
-      *::after {
-        box-sizing: border-box;
-      }
-      html,
-      body {
+      *, *::before, *::after { box-sizing: border-box; }
+      html, body {
         margin: 0;
         padding: 0;
         background: var(--bg);
@@ -186,14 +174,8 @@
         min-height: 100vh;
         min-height: 100dvh;
       }
-      a {
-        color: var(--link);
-        text-decoration: none;
-      }
-      a:hover {
-        color: var(--link-hover);
-        text-decoration: underline;
-      }
+      a { color: var(--link); text-decoration: none; }
+      a:hover { color: var(--link-hover); text-decoration: underline; }
       .page-header {
         display: flex;
         align-items: center;
@@ -217,10 +199,7 @@
         font-size: 0.85rem;
       }
       @media (prefers-reduced-motion: reduce) {
-        * {
-          animation: none !important;
-          transition: none !important;
-        }
+        * { animation: none !important; transition: none !important; }
       }
     </style>
 
@@ -228,88 +207,119 @@
   </head>
   <body>
     <a href="#chat" class="skip-link">Skip to chat</a>
-  <!--
+
     <header class="page-header">
       <a class="brand" href="/" aria-label="UrutiHub home">
         <img src="/logo.svg" alt="UrutiHub" height="28" decoding="async" />
       </a>
 
-      <button
-        id="theme-toggle"
-        class="theme-toggle"
-        type="button"
-        aria-label="Toggle color theme"
-        title="Toggle theme"
-      >
-        <svg
-          class="icon-sun"
-          viewBox="0 0 24 24"
-          width="20"
-          height="20"
-          aria-hidden="true"
-          focusable="false"
+      <div class="header-actions">
+        <!-- Anonymous: show Sign in / Sign up. Authenticated: show user menu. -->
+        <div class="auth-buttons" data-auth-anon hidden>
+          <button type="button" class="btn-ghost" data-action="open-login">
+            Sign in
+          </button>
+          <button type="button" class="btn-pill" data-action="open-register">
+            Sign up
+          </button>
+        </div>
+
+        <div class="user-menu" data-auth-user hidden>
+          <button
+            type="button"
+            class="user-menu-trigger"
+            data-user-menu-trigger
+            aria-haspopup="menu"
+            aria-expanded="false"
+          >
+            <span class="user-avatar" data-user-avatar aria-hidden="true">U</span>
+            <span class="user-name" data-user-name>User</span>
+            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+              <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2"
+                fill="none" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+          <div class="user-menu-popover" data-user-menu-popover role="menu" hidden>
+            <div class="user-menu-header">
+              <span class="user-menu-name" data-user-menu-name></span>
+              <span class="user-menu-email" data-user-menu-email></span>
+              <span class="user-menu-roles" data-user-menu-roles></span>
+            </div>
+            <button type="button" class="user-menu-item" data-action="open-my-appointments">
+              <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                <rect x="3" y="5" width="18" height="16" rx="2" stroke="currentColor"
+                  stroke-width="2" fill="none" />
+                <path d="M3 9h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" />
+              </svg>
+              My appointments
+            </button>
+            <button
+              type="button"
+              class="user-menu-item"
+              data-action="open-admin"
+              data-role-required="ADMIN"
+              hidden
+            >
+              <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                <path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z"
+                  stroke="currentColor" stroke-width="2" fill="none"
+                  stroke-linejoin="round" />
+              </svg>
+              Admin · all appointments
+            </button>
+            <button type="button" class="user-menu-item" data-action="toggle-theme">
+              <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                <path d="M21 13.5A9 9 0 1 1 10.5 3a7 7 0 0 0 10.5 10.5z"
+                  fill="currentColor" />
+              </svg>
+              <span data-theme-label>Toggle theme</span>
+            </button>
+            <hr class="user-menu-sep" />
+            <button type="button" class="user-menu-item user-menu-danger" data-action="logout">
+              <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                <path d="M15 17l5-5-5-5M20 12H9M12 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h6"
+                  stroke="currentColor" stroke-width="2" fill="none"
+                  stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+              Sign out
+            </button>
+          </div>
+        </div>
+
+        <button
+          id="theme-toggle"
+          class="theme-toggle"
+          type="button"
+          aria-label="Toggle color theme"
+          title="Toggle theme"
         >
-          <circle cx="12" cy="12" r="4" fill="currentColor" />
-          <g stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <path d="M12 2v3" />
-            <path d="M12 19v3" />
-            <path d="M2 12h3" />
-            <path d="M19 12h3" />
-            <path d="M4.2 4.2l2.1 2.1" />
-            <path d="M17.7 17.7l2.1 2.1" />
-            <path d="M4.2 19.8l2.1-2.1" />
-            <path d="M17.7 6.3l2.1-2.1" />
-          </g>
-        </svg>
-        <svg
-          class="icon-moon"
-          viewBox="0 0 24 24"
-          width="20"
-          height="20"
-          aria-hidden="true"
-          focusable="false"
-        >
-          <path
-            d="M21 13.5A9 9 0 1 1 10.5 3a7 7 0 0 0 10.5 10.5Z"
-            fill="currentColor"
-          />
-        </svg>
-        <svg
-          class="icon-system"
-          viewBox="0 0 24 24"
-          width="20"
-          height="20"
-          aria-hidden="true"
-          focusable="false"
-        >
-          <rect
-            x="3"
-            y="4"
-            width="18"
-            height="13"
-            rx="2"
-            stroke="currentColor"
-            stroke-width="2"
-            fill="none"
-          />
-          <path
-            d="M8 20h8"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-          />
-        </svg>
-      </button>
+          <svg class="icon-sun" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <circle cx="12" cy="12" r="4" fill="currentColor" />
+            <g stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M12 2v3" /><path d="M12 19v3" />
+              <path d="M2 12h3" /><path d="M19 12h3" />
+              <path d="M4.2 4.2l2.1 2.1" /><path d="M17.7 17.7l2.1 2.1" />
+              <path d="M4.2 19.8l2.1-2.1" /><path d="M17.7 6.3l2.1-2.1" />
+            </g>
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path d="M21 13.5A9 9 0 1 1 10.5 3a7 7 0 0 0 10.5 10.5Z" fill="currentColor" />
+          </svg>
+          <svg class="icon-system" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <rect x="3" y="4" width="18" height="13" rx="2" stroke="currentColor"
+              stroke-width="2" fill="none" />
+            <path d="M8 20h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+        </button>
+      </div>
     </header>
--->
+
     <main class="page-main">
       <div class="stage">
         <div class="welcome">
           <h1 class="welcome-logo">
             <img src="/logo.svg" alt="UrutiHub" decoding="async" />
-            <!-- Visually-hidden text gives the H1 a real semantic value
-                 ("UrutiHub UrutiBot") that matches the page <title> and
-                 reinforces the brand keyword for search engines. -->
             <span class="visually-hidden">UrutiBot</span>
           </h1>
           <p class="welcome-sub">
@@ -330,107 +340,27 @@
               <span class="chat-card-name">UrutiBot</span>
               <span class="chat-card-meta">
                 <span class="chat-card-status" aria-hidden="true"></span>
-                <span class="chat-card-status-text">Online</span>
-                <span
-                  class="chat-card-sep"
-                  data-chat-email-sep
-                  aria-hidden="true"
-                  hidden
-                  >·</span
-                >
-                <span
-                  class="chat-card-email"
-                  data-chat-email-display
-                  hidden
-                ></span>
+                <span class="chat-card-status-text" data-chat-status-text>Online</span>
+                <span class="chat-card-sep" data-chat-email-sep aria-hidden="true" hidden>·</span>
+                <span class="chat-card-email" data-chat-email-display hidden></span>
               </span>
             </div>
             <button
               type="button"
               class="btn-new-chat"
               data-chat-reset
-              hidden
               aria-label="Start a new conversation. This permanently clears the current chat history."
               title="Start a new conversation - this permanently clears your current chat history."
             >
-              <svg
-                viewBox="0 0 24 24"
-                width="14"
-                height="14"
-                aria-hidden="true"
-                focusable="false"
-              >
-                <path
-                  d="M12 5v14M5 12h14"
-                  stroke="currentColor"
-                  stroke-width="2.4"
-                  stroke-linecap="round"
-                />
+              <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+                <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4"
+                  stroke-linecap="round" />
               </svg>
               <span>New chat</span>
             </button>
           </header>
 
-          <!-- Pre-chat email gate: empty-state hero + docked input that
-               mirrors the chat composer position, so it reads as a
-               placeholder for the live conversation. -->
-          <form class="chat-prechat" data-chat-prechat novalidate>
-            <div class="prechat-hero">
-             
-              <h2 class="prechat-hero-title">Hi! I'm UrutiBot</h2>
-              <p class="prechat-hero-sub">
-                Pop in your email first so I can remember our chat- that's it.
-              </p>
-            </div>
-            <div class="prechat-dock">
-              <label class="visually-hidden" for="chat-email"
-                >Email address</label
-              >
-              <div class="prechat-row">
-                <input
-                  id="chat-email"
-                  type="email"
-                  name="memoryId"
-                  autocomplete="email"
-                  inputmode="email"
-                  required
-                  placeholder="info@urutihub.com"
-                  data-chat-email
-                />
-                <button
-                  type="submit"
-                  class="btn btn-primary btn-icon"
-                  aria-label="Start chat"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    width="18"
-                    height="18"
-                    aria-hidden="true"
-                    focusable="false"
-                  >
-                    <path
-                      d="M5 12h14M13 6l6 6-6 6"
-                      stroke="currentColor"
-                      stroke-width="2.4"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      fill="none"
-                    />
-                  </svg>
-                </button>
-              </div>
-              <p
-                class="form-error"
-                data-chat-prechat-error
-                hidden
-                role="alert"
-              ></p>
-            </div>
-          </form>
-
-          <!-- Conversation -->
-          <div class="chat-conversation" data-chat-conversation hidden>
+          <div class="chat-conversation" data-chat-conversation>
             <div
               class="chat-log"
               data-chat-log
@@ -442,19 +372,13 @@
 
             <div class="chat-error" data-chat-error hidden role="alert">
               <p data-chat-error-msg></p>
-              <button
-                type="button"
-                class="btn btn-secondary btn-sm"
-                data-chat-retry
-              >
+              <button type="button" class="btn btn-secondary btn-sm" data-chat-retry>
                 Retry
               </button>
             </div>
 
             <form class="chat-composer" data-chat-form>
-              <label class="visually-hidden" for="chat-input"
-                >Your message</label
-              >
+              <label class="visually-hidden" for="chat-input">Your message</label>
               <textarea
                 id="chat-input"
                 data-chat-input
@@ -470,13 +394,7 @@
                 data-chat-send
                 aria-label="Send message"
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  width="18"
-                  height="18"
-                  aria-hidden="true"
-                  focusable="false"
-                >
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
                   <path d="M3 11l18-8-8 18-2-8-8-2Z" fill="currentColor" />
                 </svg>
               </button>
@@ -487,21 +405,8 @@
                 hidden
                 aria-label="Stop streaming"
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  width="18"
-                  height="18"
-                  aria-hidden="true"
-                  focusable="false"
-                >
-                  <rect
-                    x="6"
-                    y="6"
-                    width="12"
-                    height="12"
-                    rx="2"
-                    fill="currentColor"
-                  />
+                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                  <rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" />
                 </svg>
               </button>
             </form>
@@ -517,6 +422,205 @@
       <a href="https://www.urutihub.com" target="_blank" rel="noopener">UrutiHub</a>
     </footer>
 
+    <!-- =====================  AUTH MODAL  ===================== -->
+    <div class="modal" data-modal="auth" hidden role="dialog" aria-modal="true"
+         aria-labelledby="auth-modal-title">
+      <div class="modal-backdrop" data-modal-close></div>
+      <div class="modal-panel">
+        <button type="button" class="modal-close" data-modal-close aria-label="Close">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2"
+              stroke-linecap="round" />
+          </svg>
+        </button>
+        <h2 class="modal-title" id="auth-modal-title">Welcome back</h2>
+        <p class="modal-subtitle" data-auth-subtitle>
+          Sign in to book, view, or cancel appointments.
+        </p>
+
+        <div class="tab-row" role="tablist">
+          <button type="button" class="tab is-active" data-auth-tab="login"
+                  role="tab" aria-selected="true">Sign in</button>
+          <button type="button" class="tab" data-auth-tab="register"
+                  role="tab" aria-selected="false">Create account</button>
+        </div>
+
+        <form class="auth-form" data-auth-form="login" novalidate>
+          <label class="field">
+            <span class="field-label">Email</span>
+            <input type="email" name="email" autocomplete="email" required
+                   placeholder="you@example.com" />
+          </label>
+          <label class="field">
+            <span class="field-label">Password</span>
+            <input type="password" name="password" autocomplete="current-password"
+                   required minlength="8" placeholder="••••••••" />
+          </label>
+          <p class="form-error" data-auth-error="login" hidden role="alert"></p>
+          <button type="submit" class="btn btn-primary btn-block" data-auth-submit="login">
+            <span class="btn-label">Sign in</span>
+            <span class="spinner" hidden></span>
+          </button>
+          <p class="auth-foot">
+            New here?
+            <a href="#" data-auth-switch="register">Create an account</a>
+          </p>
+        </form>
+
+        <form class="auth-form" data-auth-form="register" novalidate hidden>
+          <label class="field">
+            <span class="field-label">Full name</span>
+            <input type="text" name="fullName" autocomplete="name" required
+                   placeholder="Jane Doe" />
+          </label>
+          <label class="field">
+            <span class="field-label">Email</span>
+            <input type="email" name="email" autocomplete="email" required
+                   placeholder="you@example.com" />
+          </label>
+          <label class="field">
+            <span class="field-label">Phone <span class="muted">(optional)</span></span>
+            <input type="tel" name="phone" autocomplete="tel"
+                   placeholder="+250 788 000 000" />
+          </label>
+          <label class="field">
+            <span class="field-label">Password</span>
+            <input type="password" name="password" autocomplete="new-password"
+                   required minlength="8" placeholder="At least 8 characters" />
+          </label>
+          <p class="form-error" data-auth-error="register" hidden role="alert"></p>
+          <button type="submit" class="btn btn-primary btn-block" data-auth-submit="register">
+            <span class="btn-label">Create account</span>
+            <span class="spinner" hidden></span>
+          </button>
+          <p class="auth-foot">
+            Already have an account?
+            <a href="#" data-auth-switch="login">Sign in</a>
+          </p>
+        </form>
+      </div>
+    </div>
+
+    <!-- =====================  APPOINTMENTS MODAL (USER)  ===================== -->
+    <div class="modal" data-modal="my-appointments" hidden role="dialog" aria-modal="true"
+         aria-labelledby="my-apts-title">
+      <div class="modal-backdrop" data-modal-close></div>
+      <div class="modal-panel modal-panel--wide">
+        <button type="button" class="modal-close" data-modal-close aria-label="Close">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2"
+              stroke-linecap="round" />
+          </svg>
+        </button>
+        <div class="modal-head">
+          <div>
+            <h2 class="modal-title" id="my-apts-title">My appointments</h2>
+            <p class="modal-subtitle">Manage upcoming sessions with our team.</p>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" data-action="open-create-appointment">
+            <svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true">
+              <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4"
+                stroke-linecap="round" />
+            </svg>
+            New booking
+          </button>
+        </div>
+        <div class="apt-list" data-my-appointments-list>
+          <div class="apt-empty" data-list-empty hidden>
+            <p>You don't have any appointments yet.</p>
+          </div>
+          <div class="apt-loading" data-list-loading hidden>
+            <div class="spinner spinner--lg"></div>
+            <span>Loading appointments…</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =====================  CREATE APPOINTMENT MODAL  ===================== -->
+    <div class="modal" data-modal="create-appointment" hidden role="dialog" aria-modal="true"
+         aria-labelledby="create-apt-title">
+      <div class="modal-backdrop" data-modal-close></div>
+      <div class="modal-panel">
+        <button type="button" class="modal-close" data-modal-close aria-label="Close">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2"
+              stroke-linecap="round" />
+          </svg>
+        </button>
+        <h2 class="modal-title" id="create-apt-title">Book an appointment</h2>
+        <p class="modal-subtitle">Tell us what you'd like to discuss and pick a time.</p>
+
+        <form class="auth-form" data-create-apt-form novalidate>
+          <label class="field">
+            <span class="field-label">Purpose</span>
+            <input type="text" name="purpose" required maxlength="500"
+                   placeholder="e.g. Free consultation about a web app" />
+          </label>
+          <label class="field">
+            <span class="field-label">Date &amp; time</span>
+            <input type="datetime-local" name="dateTime" required />
+          </label>
+          <p class="form-error" data-create-apt-error hidden role="alert"></p>
+          <button type="submit" class="btn btn-primary btn-block" data-create-apt-submit>
+            <span class="btn-label">Confirm booking</span>
+            <span class="spinner" hidden></span>
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- =====================  ADMIN APPOINTMENTS MODAL  ===================== -->
+    <div class="modal" data-modal="admin-appointments" hidden role="dialog" aria-modal="true"
+         aria-labelledby="admin-apts-title">
+      <div class="modal-backdrop" data-modal-close></div>
+      <div class="modal-panel modal-panel--wide">
+        <button type="button" class="modal-close" data-modal-close aria-label="Close">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2"
+              stroke-linecap="round" />
+          </svg>
+        </button>
+        <div class="modal-head">
+          <div>
+            <h2 class="modal-title" id="admin-apts-title">All appointments</h2>
+            <p class="modal-subtitle">Update status or cancel any booking.</p>
+          </div>
+          <div class="modal-pager" data-admin-pager>
+            <button type="button" class="btn-icon-sm" data-admin-prev aria-label="Previous page">
+              <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2"
+                  fill="none" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
+            <span data-admin-pager-text>Page 1</span>
+            <button type="button" class="btn-icon-sm" data-admin-next aria-label="Next page">
+              <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
+                <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2"
+                  fill="none" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="apt-list" data-admin-appointments-list>
+          <div class="apt-empty" data-list-empty hidden>
+            <p>No appointments to display.</p>
+          </div>
+          <div class="apt-loading" data-list-loading hidden>
+            <div class="spinner spinner--lg"></div>
+            <span>Loading appointments…</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast root -->
+    <div class="toast-root" data-toast-root aria-live="polite" aria-atomic="true"></div>
+
+    <script src="/js/api.js" defer></script>
+    <script src="/js/auth.js" defer></script>
+    <script src="/js/appointments.js" defer></script>
     <script src="/js/chat.js" defer></script>
+    <script src="/js/main.js" defer></script>
   </body>
 </html>

@@ -1,13 +1,13 @@
 package com.aimelive.urutibot.config;
 
-import com.aimelive.urutibot.service.CustomMemoryStore;
+import com.aimelive.urutibot.service.DurableChatMemory;
+import com.aimelive.urutibot.service.DurableChatMemoryGateway;
 import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.DocumentSplitter;
 import dev.langchain4j.data.document.parser.TextDocumentParser;
 import dev.langchain4j.data.document.splitter.DocumentBySentenceSplitter;
 import dev.langchain4j.data.segment.TextSegment;
 import dev.langchain4j.memory.chat.ChatMemoryProvider;
-import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.Tokenizer;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.model.embedding.onnx.HuggingFaceTokenizer;
@@ -23,11 +23,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.Resource;
 
 import java.io.IOException;
-
-import static dev.langchain4j.data.document.loader.FileSystemDocumentLoader.loadDocument;
+import java.io.InputStream;
 
 @Configuration
 public class LangChainConfig {
+
+    private static final int PROMPT_WINDOW_MESSAGES = 10;
+
     @Value("${app.about-company-file}")
     private Resource urutiHubFile;
 
@@ -48,7 +50,10 @@ public class LangChainConfig {
             throws IOException {
 
         EmbeddingStore<TextSegment> embeddingStore = new InMemoryEmbeddingStore<>();
-        Document document = loadDocument(urutiHubFile.getFile().toPath(), new TextDocumentParser());
+        Document document;
+        try (InputStream in = urutiHubFile.getInputStream()) {
+            document = new TextDocumentParser().parse(in);
+        }
 
         DocumentSplitter documentSplitter = new DocumentBySentenceSplitter(100,
                 10, tokenizer);
@@ -78,11 +83,8 @@ public class LangChainConfig {
     }
 
     @Bean
-    ChatMemoryProvider chatMemoryProvider(CustomMemoryStore memoryStore) {
-        return memoryId -> MessageWindowChatMemory.builder()
-                .id(memoryId)
-                .chatMemoryStore(memoryStore)
-                .maxMessages(10)
-                .build();
+    ChatMemoryProvider chatMemoryProvider(DurableChatMemoryGateway gateway) {
+        return memoryId -> new DurableChatMemory(
+                memoryId.toString(), PROMPT_WINDOW_MESSAGES, gateway);
     }
 }

@@ -3,6 +3,9 @@ package com.aimelive.urutibot.exception;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -41,6 +44,22 @@ public class HttpExceptionAdvice {
         errorMap.put("error", "Missing part");
         errorMap.put("message", exception.getMessage());
         return ResponseEntity.badRequest().body(errorMap);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, String>> handleAccessDenied(AccessDeniedException exception) {
+        Map<String, String> errorMap = new HashMap<>();
+        errorMap.put("error", HttpStatus.FORBIDDEN.name());
+        errorMap.put("message", "You are not allowed to perform this action");
+        return new ResponseEntity<>(errorMap, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler({BadCredentialsException.class, AuthenticationException.class})
+    public ResponseEntity<Map<String, String>> handleAuthentication(Exception exception) {
+        Map<String, String> errorMap = new HashMap<>();
+        errorMap.put("error", HttpStatus.UNAUTHORIZED.name());
+        errorMap.put("message", "Authentication failed");
+        return new ResponseEntity<>(errorMap, HttpStatus.UNAUTHORIZED);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

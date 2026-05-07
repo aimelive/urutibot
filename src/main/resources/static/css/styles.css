@@ -1143,6 +1143,714 @@ a:hover {
   }
 }
 
+/* ============================================================
+   Auth + Appointments + Modals + Toast
+   Added for the auth-aware frontend rewrite.
+   ============================================================ */
+
+/* ---------- header actions ---------- */
+.header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.auth-buttons {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.btn-ghost {
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.55rem 0.95rem;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text);
+  border-radius: 12px;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease;
+}
+.btn-ghost:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.btn-pill {
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.55rem 1.05rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--brand) 60%, transparent);
+  background: linear-gradient(
+    135deg,
+    var(--brand) 0%,
+    var(--brand-strong) 100%
+  );
+  color: var(--on-brand);
+  cursor: pointer;
+  box-shadow: var(--shadow-brand);
+  transition:
+    filter 0.18s ease,
+    transform 0.08s ease;
+}
+.btn-pill:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+.btn-pill:active {
+  transform: translateY(0);
+}
+
+.btn-ghost-danger {
+  font: inherit;
+  font-weight: 600;
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--danger) 35%, var(--border));
+  color: var(--danger);
+  border-radius: 12px;
+  padding: 0.45rem 0.85rem;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease;
+  font-size: 0.85rem;
+}
+.btn-ghost-danger:hover {
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+}
+
+.btn-block {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+}
+
+/* ---------- user menu ---------- */
+/* z-index 1000 promotes the user-menu above the chat-card, which establishes
+   its own stacking context via `isolation: isolate` and would otherwise paint
+   over our popover regardless of the popover's local z-index. */
+.user-menu {
+  position: relative;
+  z-index: 1000;
+}
+.user-menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.65rem 0.4rem 0.45rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  font: inherit;
+  color: var(--text);
+  transition:
+    background 0.18s,
+    border-color 0.18s;
+}
+.user-menu-trigger:hover {
+  background: var(--surface-2);
+  border-color: color-mix(in srgb, var(--brand) 30%, var(--border));
+}
+.user-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: linear-gradient(
+    135deg,
+    var(--brand) 0%,
+    var(--brand-strong) 100%
+  );
+  color: var(--on-brand);
+  font-size: 0.78rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.02em;
+}
+.user-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.user-menu-popover {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  min-width: 240px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-lg);
+  padding: 0.5rem;
+  z-index: 60;
+  animation: pop-in 0.18s ease-out both;
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.user-menu-header {
+  padding: 0.65rem 0.75rem 0.55rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0.35rem;
+}
+.user-menu-name {
+  font-weight: 650;
+  font-size: 0.95rem;
+}
+.user-menu-email {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.user-menu-roles {
+  font-size: 0.72rem;
+  color: var(--brand-strong);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-top: 0.15rem;
+}
+.user-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  background: transparent;
+  border: 0;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.92rem;
+  text-align: left;
+  cursor: pointer;
+}
+.user-menu-item:hover {
+  background: var(--surface-2);
+}
+.user-menu-item.user-menu-danger {
+  color: var(--danger);
+}
+.user-menu-sep {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 0.35rem 0;
+}
+
+/* Hide legacy stand-alone theme toggle when user-menu is visible (auth) */
+.user-menu:not([hidden]) ~ .theme-toggle {
+  display: none;
+}
+
+/* ---------- modals ---------- */
+body.modal-open {
+  overflow: hidden;
+}
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: modal-fade 0.2s ease-out both;
+}
+@keyframes modal-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, #000 55%, transparent);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+.modal-panel {
+  position: relative;
+  width: 100%;
+  max-width: 460px;
+  max-height: 92vh;
+  max-height: 92dvh;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 1.75rem 1.5rem 1.5rem;
+  box-shadow: var(--shadow-lg);
+  animation: modal-pop 0.22s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+.modal-panel--wide {
+  max-width: 720px;
+}
+@keyframes modal-pop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.modal-close {
+  position: absolute;
+  top: 0.85rem;
+  right: 0.85rem;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: transparent;
+  border: 0;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.modal-close:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.modal-title {
+  margin: 0 0 0.25rem;
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+.modal-subtitle {
+  margin: 0 0 1.25rem;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+.modal-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+.modal-pager {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+.btn-icon-sm {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+.btn-icon-sm:hover {
+  background: var(--surface-2);
+  border-color: color-mix(in srgb, var(--brand) 30%, var(--border));
+}
+
+/* ---------- tabs ---------- */
+.tab-row {
+  display: inline-flex;
+  background: var(--surface-2);
+  padding: 4px;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  width: 100%;
+}
+.tab {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  padding: 0.55rem 0.9rem;
+  border-radius: 9px;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    background 0.18s,
+    color 0.18s,
+    box-shadow 0.18s;
+}
+.tab.is-active {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+/* ---------- form fields ---------- */
+.field {
+  display: block;
+  margin-bottom: 0.85rem;
+}
+.field-label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 0.35rem;
+  letter-spacing: 0.01em;
+}
+.field input,
+.field textarea,
+.field select {
+  width: 100%;
+  height: 46px;
+  padding: 0 1rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.96rem;
+  transition:
+    border-color 0.18s,
+    box-shadow 0.18s,
+    background 0.18s;
+}
+.field input:focus,
+.field textarea:focus,
+.field select:focus {
+  border-color: var(--brand);
+  background: var(--surface);
+  box-shadow: 0 0 0 4px var(--brand-soft);
+  outline: none;
+}
+/* Password visibility toggle — wraps each <input type="password"> so the
+   eye button can sit inside the input's right padding without disturbing
+   layout. The wrapper is display:block so .field input:width:100% still
+   spans the full row. */
+.pw-wrap {
+  position: relative;
+  display: block;
+}
+.pw-wrap input {
+  /* leave room for the toggle on the right */
+  padding-right: 3rem;
+}
+.pw-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.4rem;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    background 0.15s;
+}
+.pw-toggle:hover {
+  color: var(--text);
+  background: var(--brand-soft);
+}
+.pw-toggle:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+.auth-form .form-error {
+  margin-bottom: 0.85rem;
+}
+.auth-foot {
+  margin: 0.85rem 0 0;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+.auth-foot a {
+  color: var(--brand-strong);
+  font-weight: 600;
+}
+
+/* ---------- spinner ---------- */
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid color-mix(in srgb, var(--on-brand) 35%, transparent);
+  border-top-color: var(--on-brand);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  vertical-align: -3px;
+}
+.spinner--lg {
+  width: 24px;
+  height: 24px;
+  border-width: 3px;
+  border-color: color-mix(in srgb, var(--text) 18%, transparent);
+  border-top-color: var(--brand);
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- appointments list ---------- */
+.apt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.apt-empty {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--text-muted);
+}
+.apt-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2rem 1rem;
+  color: var(--text-muted);
+}
+.apt-card {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1rem 1.1rem;
+  background: var(--surface);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition:
+    border-color 0.18s,
+    box-shadow 0.18s;
+}
+.apt-card:hover {
+  border-color: color-mix(in srgb, var(--brand) 25%, var(--border));
+  box-shadow: 0 6px 16px -10px rgba(0, 0, 0, 0.18);
+}
+.apt-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.apt-when {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+.apt-when strong {
+  font-size: 0.98rem;
+}
+.apt-when .muted {
+  font-size: 0.8rem;
+}
+.apt-purpose {
+  margin: 0;
+  color: var(--text);
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+.apt-meta {
+  margin: 0;
+  font-size: 0.85rem;
+}
+.apt-id {
+  margin: 0;
+  font-size: 0.78rem;
+}
+.apt-id code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85em;
+  background: color-mix(in srgb, var(--text) 6%, transparent);
+  padding: 0.05rem 0.3rem;
+  border-radius: 4px;
+}
+.apt-card-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+.apt-status-select {
+  height: 34px;
+  padding: 0 0.55rem;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+/* ---------- badges ---------- */
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.badge--info {
+  background: var(--brand-soft);
+  color: var(--brand-strong);
+  border: 1px solid color-mix(in srgb, var(--brand) 30%, transparent);
+}
+.badge--success {
+  background: color-mix(in srgb, var(--success) 14%, transparent);
+  color: var(--success);
+  border: 1px solid color-mix(in srgb, var(--success) 35%, transparent);
+}
+.badge--danger {
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  color: var(--danger);
+  border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent);
+}
+
+/* ---------- inline auth widget (inside chat bubble) ---------- */
+.inline-auth {
+  margin-top: 0.85rem;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--brand) 14%, var(--surface)) 0%,
+    color-mix(in srgb, var(--brand) 4%, var(--surface)) 100%
+  );
+  border: 1px solid color-mix(in srgb, var(--brand) 28%, var(--border));
+}
+.inline-auth-head strong {
+  display: block;
+  font-size: 0.95rem;
+  margin-bottom: 0.15rem;
+}
+.inline-auth-head p {
+  margin: 0 0 0.65rem;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+.inline-auth-actions {
+  margin-top: 0.85rem;
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+/* ---------- toast ---------- */
+.toast-root {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  z-index: 300;
+  max-width: 360px;
+}
+.toast {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.7rem 1rem;
+  box-shadow: var(--shadow-lg);
+  font-size: 0.9rem;
+  color: var(--text);
+  transform: translateY(-8px);
+  opacity: 0;
+  transition:
+    transform 0.2s ease,
+    opacity 0.2s ease;
+  border-left: 4px solid var(--brand);
+}
+.toast.is-in {
+  transform: translateY(0);
+  opacity: 1;
+}
+.toast.is-out {
+  opacity: 0;
+}
+.toast--success {
+  border-left-color: var(--success);
+}
+.toast--error {
+  border-left-color: var(--danger);
+}
+.toast--info {
+  border-left-color: var(--brand);
+}
+
+/* ---------- responsive overrides ---------- */
+@media (max-width: 640px) {
+  .header-actions {
+    gap: 0.4rem;
+  }
+  .user-name {
+    max-width: 70px;
+  }
+  .modal-panel {
+    padding: 1.5rem 1.1rem 1.2rem;
+    border-radius: 16px;
+  }
+  .modal-panel--wide {
+    max-width: 100%;
+  }
+  .toast-root {
+    left: 1rem;
+    right: 1rem;
+    max-width: none;
+  }
+  .apt-card-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+  }
+}
+
 /* ---------- reduced motion ---------- */
 @media (prefers-reduced-motion: reduce) {
   *,

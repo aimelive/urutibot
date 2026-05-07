@@ -1,26 +1,15 @@
 package com.aimelive.urutibot.service;
 
-import com.aimelive.urutibot.model.Appointment;
+import com.aimelive.urutibot.event.AppointmentLifecycleEvent;
 
+/**
+ * Public hook the rest of the codebase can call directly when an in-process
+ * {@link AppointmentLifecycleEvent} dispatch isn't available (e.g. ad-hoc
+ * admin tooling). The HTTP/booking flow uses the
+ * {@code @TransactionalEventListener(AFTER_COMMIT)} pathway in
+ * {@link NotificationServiceImpl} so emails only fire after the DB write
+ * has durably committed.
+ */
 public interface NotificationService {
-    /**
-     * Send email notification to admin when appointment is created
-     * 
-     * @param appointment The appointment that was created
-     */
-    void sendAppointmentCreatedNotification(Appointment appointment);
-
-    /**
-     * Send email notification to admin when appointment is cancelled
-     * 
-     * @param appointment The appointment that was cancelled
-     */
-    void sendAppointmentCancelledNotification(Appointment appointment);
-
-    /**
-     * Send email notification to admin when appointment is completed
-     * 
-     * @param appointment The appointment that was completed
-     */
-    void sendAppointmentCompletedNotification(Appointment appointment);
+    void onAppointmentEvent(AppointmentLifecycleEvent event);
 }
