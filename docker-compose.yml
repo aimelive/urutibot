@@ -29,9 +29,9 @@ services:
         -XX:+ExitOnOutOfMemoryError
         -Djava.security.egd=file:/dev/urandom}
     healthcheck:
-      test: ["CMD", "bash", "-c", "</dev/tcp/127.0.0.1/8080"]
+      test: ["CMD", "/bin/busybox", "wget", "-q", "-T", "4", "-O", "/dev/null", "http://127.0.0.1:8080/actuator/health/liveness"]
       interval: 30s
       timeout: 5s
       retries: 5
-      start_period: 60s
+      start_period: 90s
     stop_grace_period: 30s

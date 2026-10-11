@@ -58,6 +58,9 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
+                                // Liveness/readiness probes for Docker/K8s healthchecks
+                                "/actuator/health",
+                                "/actuator/health/**",
                                 "/api/auth/register",
                                 "/api/auth/login",
                                 "/api/chatbot/**",

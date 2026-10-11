@@ -1,14 +1,10 @@
 # syntax=docker/dockerfile:1.7
 
-# Multi-stage build for UrutiBot (Spring Boot, Java 21)
-# - Builder uses Maven + Temurin JDK 21
-# - JRE stage creates a minimal custom runtime via jlink
-# - Runtime uses debian:12-slim + minimal JRE + libgomp1 for ONNX runtime
-# - Includes urutihub.txt on filesystem and sets default env to point to it
-
 ARG MAVEN_VERSION=3.9.9
+ARG BUSYBOX_VERSION=1.37.0
 
-FROM maven:${MAVEN_VERSION}-eclipse-temurin-21 AS builder
+# ---------------------------------------------------------------------------
+FROM --platform=$BUILDPLATFORM maven:${MAVEN_VERSION}-eclipse-temurin-21 AS builder
 WORKDIR /workspace
 
 # Pre-fetch dependencies for better Docker layer caching
@@ -16,31 +12,60 @@ COPY pom.xml ./
 RUN --mount=type=cache,target=/root/.m2 \
     mvn -q -DskipTests dependency:go-offline
 
-# Copy sources and build
 COPY src ./src
 RUN --mount=type=cache,target=/root/.m2 \
     mvn -q -DskipTests package
 
-# Runtime image (Temurin JRE 21 on Jammy, multi-arch and stable under QEMU)
-FROM eclipse-temurin:21-jre-jammy AS runtime
+RUN java -Djarmode=tools -jar target/*-SNAPSHOT.jar extract --layers --launcher --destination /extracted
 
-ENV APP_HOME=/app
+# Work out which JDK modules the app actually needs (feeds jlink below)
+COPY docker/jdeps-modules.sh /docker/jdeps-modules.sh
+RUN sh /docker/jdeps-modules.sh /extracted /modules.txt
+
+# ---------------------------------------------------------------------------
+FROM --platform=$BUILDPLATFORM maven:${MAVEN_VERSION}-eclipse-temurin-21 AS prune
+ARG TARGETARCH
+COPY --from=builder /extracted /extracted
+COPY docker/prune-natives.sh /docker/prune-natives.sh
+RUN sh /docker/prune-natives.sh /extracted "$TARGETARCH"
+
+# ---------------------------------------------------------------------------
+FROM eclipse-temurin:21-jdk-jammy AS jre
+COPY --from=builder /modules.txt /modules.txt
+RUN jlink \
+      --add-modules "$(cat /modules.txt)" \
+      --strip-debug \
+      --no-man-pages \
+      --no-header-files \
+      --compress zip-0 \
+      --output /jre
+
+# ---------------------------------------------------------------------------
+FROM busybox:${BUSYBOX_VERSION}-musl AS busybox
+
+FROM gcr.io/distroless/cc-debian12:nonroot AS runtime
+
+COPY --from=busybox /bin/busybox /bin/busybox
+
+ENV JAVA_HOME=/opt/java \
+    PATH=/opt/java/bin:/usr/local/bin:/usr/bin:/bin \
+    LANG=C.UTF-8 \
+    APP_HOME=/app
+COPY --from=jre /jre ${JAVA_HOME}
+# Build-time sanity check: the jlinked runtime must start on this base
+RUN ["/opt/java/bin/java", "-version"]
+
 WORKDIR ${APP_HOME}
+# Least-changing layers first so day-to-day app changes only rebuild the last one.
+# Files stay root-owned (read-only for the app user); the app writes only to /tmp and $HOME.
+COPY --from=prune /extracted/dependencies/ ./
+COPY --from=prune /extracted/spring-boot-loader/ ./
+COPY --from=prune /extracted/snapshot-dependencies/ ./
+COPY --from=prune /extracted/application/ ./
+COPY src/main/resources/urutihub.txt ./urutihub.txt
 
-# Install minimal native deps for onnxruntime
-USER root
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends libgomp1 ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy application
-COPY --from=builder /workspace/target/*-SNAPSHOT.jar ${APP_HOME}/app.jar
-COPY src/main/resources/urutihub.txt ${APP_HOME}/urutihub.txt
-
-# Create non-root user
-RUN useradd -r -u 1001 -g root spring \
-    && chown -R spring:root ${APP_HOME}
-USER spring
+# distroless :nonroot = uid 65532, HOME=/home/nonroot (used by the DJL tokenizer cache)
+USER nonroot
 
 # Sensible JVM defaults for containers; can be overridden via JAVA_OPTS
 ENV JAVA_OPTS="-XX:MaxRAMPercentage=75.0 -XX:+UseStringDeduplication -XX:+ExitOnOutOfMemoryError -Djava.security.egd=file:/dev/urandom"
@@ -50,5 +75,10 @@ ENV APP_ABOUT_COMPANY_FILE=file:/app/urutihub.txt
 
 EXPOSE 8080
 
-# Run the Spring Boot app
-ENTRYPOINT ["sh","-c","java $JAVA_OPTS -jar app.jar"]
+# Liveness probe (permitted anonymously in SecurityConfig). busybox wget exits
+# non-zero on any HTTP error, so a 503 from a DOWN liveness state fails the check.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=5 \
+  CMD ["/bin/busybox", "wget", "-q", "-T", "4", "-O", "/dev/null", "http://127.0.0.1:8080/actuator/health/liveness"]
+
+# busybox sh expands JAVA_OPTS, then exec so the JVM is PID 1 and receives SIGTERM
+ENTRYPOINT ["/bin/busybox", "sh", "-c", "exec /opt/java/bin/java $JAVA_OPTS org.springframework.boot.loader.launch.JarLauncher"]
